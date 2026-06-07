@@ -1,0 +1,174 @@
+{% extends 'base.html.twig' %}
+
+{% set partidaId = partida.idPartida %}
+
+{% block title %}FIA CENTRAL - HISTÓRICO DE RESULTADOS{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900/40 border border-slate-900 p-5 rounded-xl backdrop-blur-sm gap-4">
+            <div>
+                <span class="text-cyan-400 font-racing text-xs tracking-widest block uppercase">Telemetry & Database // FIA Official</span>
+                <h1 class="text-2xl font-black font-racing uppercase italic mt-0.5">HISTÓRICO DE <span class="text-cyan-400">RESULTADOS</span></h1>
+            </div>
+            <a href="/career/main/{{ partida.idPartida }}" class="text-xs font-racing uppercase tracking-wider border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded transition-colors">
+                Volver al Paddock
+            </a>
+        </header>
+
+        <form method="GET" action="{{ path('app_career_resultados', { 'partidaId': partida.idPartida }) }}" class="bg-slate-900/20 border border-slate-900 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 items-end font-mono">
+            <div>
+                <label class="block text-[10px] text-slate-500 uppercase font-racing mb-1 tracking-wider">Filtrar Categoría</label>
+                <select name="categoria" onchange="this.form.submit()" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs px-3 py-2 rounded focus:outline-none focus:border-cyan-500 cursor-pointer">
+                    {% for cat in categoriasDisponibles %}
+                        <option value="{{ cat }}" {% if filtros.categoria == cat %}selected{% endif %}>🏎️ {{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] text-slate-500 uppercase font-racing mb-1 tracking-wider">Filtrar Temporada</label>
+                <select name="ano" onchange="this.form.submit()" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs px-3 py-2 rounded focus:outline-none focus:border-cyan-500 cursor-pointer">
+                    {% for anio in añosDisponibles %}
+                        <option value="{{ anio }}" {% if filtros.ano == anio %}selected{% endif %}>📅 AÑO SIMULACIÓN {{ anio }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="text-xs text-slate-400 pb-2 italic text-center sm:text-right">
+                Datos oficiales encriptados por la FIA
+            </div>
+        </form>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            
+            <div class="lg:col-span-1 bg-slate-900/30 border border-slate-900 rounded-xl overflow-hidden flex flex-col">
+                <div class="p-3 bg-slate-900/60 border-b border-slate-900 text-[10px] font-racing text-slate-400 uppercase tracking-widest">
+                    Eventos Finalizados ({{ carreras|length }})
+                </div>
+                <div class="divide-y divide-slate-900 max-h-[500px] overflow-y-auto font-mono">
+                    {% for carrera in carreras %}
+                        <a href="{{ path('app_career_resultados', { 'partidaId': partida.idPartida, 'categoria': filtros.categoria, 'ano': filtros.ano, 'eventoId': carrera.id, 'sesion': filtros.sesion }) }}" 
+                           class="block p-3.5 text-left transition-colors {% if filtros.eventoId == carrera.id %}bg-cyan-950/20 border-l-2 border-cyan-500 text-white{% else %}hover:bg-slate-900/40 text-slate-400 hover:text-slate-200{% endif %}">
+                            <div class="text-[10px] text-slate-500 uppercase tracking-tighter">Ronda 0{{ carrera.ordenCarrera }}</div>
+                            <div class="text-xs font-bold truncate mt-0.5">{{ carrera.circuito.nombreCircuito|default('Gran Premio') }}</div>
+                            <div class="text-[9px] text-slate-500 uppercase mt-1">🌍 {{ carrera.circuito.localizacion|default('Internacional') }}</div>
+                        </a>
+                    {% else %}
+                        <div class="p-6 text-center text-xs text-slate-600 uppercase italic">
+                            No hay registros de carreras para estos filtros.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 space-y-4">
+                {% if eventoActivo %}
+                    <div class="flex flex-wrap bg-slate-950 border-b border-slate-900 font-mono text-xs">
+                        {% set sesiones = {
+                            'LIBRES_1': 'FP1',
+                            'LIBRES_2': 'FP2',
+                            'LIBRES_3': 'FP3',
+                            'CLASIFICACION': 'Q',
+                            'CARRERA': 'RACE'
+                        } %}
+                        
+                        {% for clave, texto in sesiones %}
+                            <a href="{{ path('app_career_resultados', { 'partidaId': partida.idPartida, 'categoria': filtros.categoria, 'ano': filtros.ano, 'eventoId': filtros.eventoId, 'sesion': clave }) }}" 
+                               class="px-4 py-2.5 border-b-2 text-center font-bold tracking-wider transition-all {% if filtros.sesion == clave %}border-cyan-400 text-cyan-400 bg-cyan-500/5{% else %}border-transparent text-slate-500 hover:text-slate-300{% endif %}">
+                                {{ texto }} <span class="hidden sm:inline text-[9px] opacity-60">({{ clave|replace({'_': ' '}) }})</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+
+                    <div class="bg-slate-900/10 border border-slate-900 rounded-xl overflow-hidden">
+                        <div class="p-4 bg-gradient-to-r from-slate-900/80 to-transparent border-b border-slate-900 flex justify-between items-center">
+                            <div>
+                                <h2 class="text-sm font-bold font-racing uppercase tracking-wide text-slate-200">
+                                    {{ eventoActivo.circuito.nombreCircuito }} 
+                                </h2>
+                                <p class="text-[10px] text-slate-500 font-mono uppercase mt-0.5">Clasificación Oficial de la Sesión: <span class="text-cyan-400">{{ filtros.sesion }}</span></p>
+                            </div>
+                            <div class="text-right font-mono text-[10px] text-slate-400 uppercase">
+                                ☀️ Clima: <span class="text-amber-400 font-bold">{{ eventoActivo.climaPrevisto }}</span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left font-mono border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-950 text-slate-500 uppercase text-[9px] tracking-wider border-b border-slate-900">
+                                        <th class="py-3 px-4 text-center w-12">POS</th>
+                                        <th class="py-3 px-4 w-12">Nº</th>
+                                        <th class="py-3 px-4">PILOTO</th>
+                                        <th class="py-3 px-4">ESCUDERÍA</th>
+                                        <th class="py-3 px-4 text-right">TIEMPO / VUELTA</th>
+                                        <th class="py-3 px-4 text-center w-16">PUNTOS</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-900/60">
+                                    {% for res in resultados %}
+                                        {# Determinamos si la fila corresponde al usuario logueado #}
+                                        {% set esHumano = res.esJugadorHumano %}
+                                        <tr class="transition-colors {% if esHumano %}bg-cyan-500/10 border-y border-cyan-500/30 hover:bg-cyan-500/15{% else %}hover:bg-slate-900/20{% endif %}">
+                                            
+                                            <td class="py-3 px-4 text-center font-black text-sm {% if res.posicionFinal == 1 %}text-amber-400{% elseif res.posicionFinal == 2 %}text-slate-300{% elseif res.posicionFinal == 3 %}text-amber-600{% else %}text-slate-400{% endif %}">
+                                                {{ res.posicionFinal }}
+                                            </td>
+
+                                            <td class="py-3 px-4 text-slate-500 font-bold">
+                                                {{ esHumano ? pilotoUsuario.numeroDorsal : (res.pilotoIa.numeroDorsal|default('--')) }}
+                                            </td>
+
+                                            <td class="py-3 px-4 font-bold">
+                                                {% if esHumano %}
+                                                    <span class="text-cyan-400">⭐ {{ pilotoUsuario.nombre }} {{ pilotoUsuario.apellido }}</span>
+                                                    <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1.5 py-0.5 rounded font-black tracking-tighter uppercase ml-1">TÚ</span>
+                                                {% else %}
+                                                    <span class="text-slate-200">{{ res.pilotoIa.nombre }} {{ res.pilotoIa.apellido }}</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td class="py-3 px-4 text-slate-400 uppercase tracking-tight text-[11px]">
+                                                {{ res.escuderia.nombreCorto|default('Independiente') }}
+                                            </td>
+
+                                            <td class="py-3 px-4 text-right font-bold tracking-tight {% if res.isVueltaRapida|default(false) %}text-purple-400{% else %}text-slate-300{% endif %}">
+                                                {{ res.tiempoClasificacion|default('--:--.---') }}
+                                                {% if res.isVueltaRapida|default(false) %}
+                                                    <span class="text-[8px] bg-purple-500/20 text-purple-300 px-1 rounded ml-1 uppercase font-black tracking-widest">🟪 VR</span>
+                                                {% endif %}
+                                            </td>
+
+                                            <td class="py-3 px-4 text-center font-black {% if res.puntosObtenidos > 0 %}text-emerald-400{% else %}text-slate-600{% endif %}">
+                                                +{{ res.puntosObtenidos }}
+                                            </td>
+
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6" class="py-8 text-center text-xs text-slate-600 uppercase italic">
+                                                No se han cargado las tablas de telemetría para esta sesión.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="border border-dashed border-slate-800 rounded-xl p-12 text-center font-mono space-y-2">
+                        <div class="text-slate-600 text-3xl">📊</div>
+                        <h3 class="text-sm font-racing text-slate-400 uppercase tracking-wider">Sin Telemetría Activa</h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto">Selecciona una de las carreras finalizadas del panel lateral para inspeccionar los tiempos por sector, vueltas rápidas y asignación de puntos de la superlicencia.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}F1 TRAYECTORIA - NUEVA LICENCIA DE PILOTO{% endblock %}
+{% block title %}F1 TRAYECTORIA - NUEVA LICENCIA DE PILOTO
+{% endblock %}
 
 {% block body %}
 	<div class="relative min-h-screen flex items-center justify-center overflow-hidden p-4">
@@ -13,7 +14,8 @@
 
 			<div class="mb-8 border-b border-slate-900 pb-4">
 				<h1 class="font-racing text-2xl font-black text-white tracking-wide uppercase italic">
-					Registro de <span class="text-red-500">Superlicencia</span>
+					Registro de
+					<span class="text-red-500">Superlicencia</span>
 				</h1>
 				<p class="text-xs text-slate-400 mt-1">Configura la identidad del piloto para iniciar tu trayectoria profesional desde el circuito base.</p>
 			</div>
@@ -52,6 +54,33 @@
 					</div>
 				</div>
 
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<div class="space-y-1">
+						<label class="block text-[10px] font-racing text-slate-500 uppercase tracking-wider">Identidad de Género</label>
+						<div class="relative">
+							<select name="genero" required class="w-full bg-slate-900 border border-slate-800 focus:border-red-500 text-slate-200 text-xs px-3 py-2.5 rounded focus:outline-none appearance-none font-mono transition-colors cursor-pointer">
+								<option value="MASCULINO" selected>♂️ MASCULINO</option>
+								<option value="FEMENINO">♀️ FEMENINO</option>
+								<option value="NO_BINARIO">⚦ NO BINARIO</option>
+							</select>
+							<div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500 text-[10px]">▼</div>
+						</div>
+					</div>
+
+					<div class="space-y-1">
+						<label class="block text-[10px] font-racing text-slate-500 uppercase tracking-wider">Preferencia de Orientación</label>
+						<div class="relative">
+							<select name="preferenciaSexual" required class="w-full bg-slate-900 border border-slate-800 focus:border-red-500 text-slate-200 text-xs px-3 py-2.5 rounded focus:outline-none appearance-none font-mono transition-colors cursor-pointer">
+								<option value="HETEROSEXUAL" selected>HETEROSEXUAL</option>
+								<option value="HOMOSEXUAL">HOMOSEXUAL</option>
+								<option value="BISEXUAL">BISEXUAL</option>
+								<option value="PANSEXUAL">PANSEXUAL</option>
+							</select>
+							<div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-500 text-[10px]">▼</div>
+						</div>
+					</div>
+				</div>
+
 				<div class="border-t border-slate-900 pt-6 flex flex-col sm:flex-row-reverse gap-3">
 					<button type="submit" class="w-full sm:w-auto flex-1 bg-red-600 hover:bg-red-700 text-white font-racing font-bold uppercase py-3 px-6 tracking-wider text-sm transition-all rounded shadow-[0_4px_15px_rgba(220,38,38,0.3)]">
 						Firmar Licencia
@@ -66,33 +95,33 @@
 
 	<script>
 		const form = document.getElementById('setup-driver-form');
-		const alertBox = document.getElementById('setup-alert');
+const alertBox = document.getElementById('setup-alert');
 
-		form.addEventListener('submit', function (e) {
-			e.preventDefault();
-			const formData = new FormData(form);
-			alertBox.classList.add('hidden');
+form.addEventListener('submit', function (e) {
+e.preventDefault();
+const formData = new FormData(form);
+alertBox.classList.add('hidden');
 
-			fetch("{{ path('api_career_setup') }}", {
-				method: 'POST',
-				body: formData
-			}).then(response => response.json()).then(data => {
-				if (data.success) {
-					alertBox.textContent = data.message;
-					alertBox.classList.remove('hidden', 'bg-red-950/40', 'border-red-500', 'text-red-400');
-					alertBox.classList.add('bg-emerald-950/50', 'border-emerald-500', 'text-emerald-400');
+fetch("{{ path('api_career_setup') }}", {
+method: 'POST',
+body: formData
+}).then(response => response.json()).then(data => {
+if (data.success) {
+alertBox.textContent = data.message;
+alertBox.classList.remove('hidden', 'bg-red-950/40', 'border-red-500', 'text-red-400');
+alertBox.classList.add('bg-emerald-950/50', 'border-emerald-500', 'text-emerald-400');
 
-					setTimeout(() => {
-						window.location.href = "/career/generation-loading/" + data.partidaId;
-					}, 1500);
-				} else {
-					alertBox.textContent = "ERROR: " + data.message;
-					alertBox.classList.remove('hidden');
-				}
-			}).catch(error => {
-				alertBox.textContent = "CONEXIÓN CAÍDA CON EL CENTRO DE CONTROL DE LA FIA";
-				alertBox.classList.remove('hidden');
-			});
-		});
+setTimeout(() => {
+window.location.href = "/career/generation-loading/" + data.partidaId;
+}, 1500);
+} else {
+alertBox.textContent = "ERROR: " + data.message;
+alertBox.classList.remove('hidden');
+}
+}).catch(error => {
+alertBox.textContent = "CONEXIÓN CAÍDA CON EL CENTRO DE CONTROL DE LA FIA";
+alertBox.classList.remove('hidden');
+});
+});
 	</script>
 {% endblock %}

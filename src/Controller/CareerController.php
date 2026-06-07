@@ -48,6 +48,8 @@ class CareerController extends AbstractController
         $nombre = trim($request->request->get('nombre'));
         $apellido = trim($request->request->get('apellido'));
         $codigoIso = $request->request->get('pais');
+        $generoElegido = trim($request->request->get('genero', 'MASCULINO'));
+        $preferenciaElegida = trim($request->request->get('preferenciaSexual', 'HETEROSEXUAL'));
         $abreviatura = strtoupper(substr(trim($request->request->get('abreviatura')), 0, 3));
 
         if (!$nombre || !$apellido || !$codigoIso || strlen($abreviatura) !== 3) {
@@ -79,8 +81,6 @@ class CareerController extends AbstractController
             $partida->setUsuario($usuario);
             $partida->setSlotNumero($slotNumero);
             $partida->setIngameAno(2026);
-            $partida->setIngameMes(1);
-            $partida->setIngameDia(1);
             $partida->setIngameEstado('Karting');
             $partida->setFechaGuardado(new \DateTime());
             $em->persist($partida);
@@ -96,6 +96,8 @@ class CareerController extends AbstractController
             $piloto->setExpActual(0);
             $piloto->setPuntosHabilidadDisponibles(0);
             $piloto->setCategoria('KARTING');
+            $piloto->setGenero($generoElegido);
+            $piloto->setPreferenciaSexual($preferenciaElegida);
 
             $piloto->setStatClasificacion(50);
             $piloto->setStatRitmo(50);
@@ -590,76 +592,75 @@ class CareerController extends AbstractController
     }
 
     #[Route('/career/choose-number/{partidaId}', name: 'app_career_choose_number', methods: ['GET'])]
-public function chooseNumber(int $partidaId, EntityManagerInterface $em): Response
-{
-    $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
-    if (!$partida) {
-        return $this->redirectToRoute('app_dashboard');
-    }
-
-    // 1. Obtener los dorsales ya ocupados por los pilotos de la IA en la categoría KARTING para esta partida
-    $pilotosIaKarting = $em->getRepository(PilotoIa::class)->findBy([
-        'partida' => $partida,
-        'categoria' => 'Karting'
-    ]);
-
-    $numerosOcupados = [];
-    foreach ($pilotosIaKarting as $pilotoIa) {
-        $numerosOcupados[] = $pilotoIa->getNumeroDorsal();
-    }
-
-    // Ordenamos los números ocupados de menor a mayor
-    sort($numerosOcupados);
-
-    return $this->render('career/choose_number.html.twig', [
-        'partidaId' => $partidaId,
-        'numerosOcupados' => $numerosOcupados
-    ]);
-}
-
-#[Route('/api/career/save-number', name: 'api_career_save_number', methods: ['POST'])]
-public function saveNumber(Request $request, EntityManagerInterface $em): JsonResponse
-{
-    $partidaId = (int)$request->request->get('partidaId');
-    $numeroElegido = (int)$request->request->get('numero');
-
-    if ($numeroElegido < 1 || $numeroElegido > 99) {
-        return new JsonResponse(['success' => false, 'message' => 'El número debe estar entre 1 y 99.'], 400);
-    }
-
-    $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
-    if (!$partida) {
-        return new JsonResponse(['success' => false, 'message' => 'Partida no encontrada.'], 404);
-    }
-
-    // 2. Validar que el número no esté ocupado por la IA en Karting de esta partida
-    $dorsalOcupado = $em->getRepository(PilotoIa::class)->findOneBy([
-        'partida' => $partida,
-        'categoria' => 'Karting',
-        'numeroDorsal' => $numeroElegido
-    ]);
-
-    if ($dorsalOcupado) {
-        return new JsonResponse(['success' => false, 'message' => 'Este dorsal ya está ocupado por otro piloto de la parrilla.'], 400);
-    }
-
-    try {
-        // 3. Buscar el PilotoUsuario (jugador real) de esta partida y actualizar su dorsal
-        $pilotoUsuario = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
-        if (!$pilotoUsuario) {
-            return new JsonResponse(['success' => false, 'message' => 'No se encontró el piloto del jugador.'], 404);
+    public function chooseNumber(int $partidaId, EntityManagerInterface $em): Response
+    {
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        if (!$partida) {
+            return $this->redirectToRoute('app_dashboard');
         }
 
-        $pilotoUsuario->setNumeroDorsal($numeroElegido);
-        $em->flush();
-
-        return new JsonResponse([
-            'success' => true,
-            'message' => 'Dorsal oficial asignado correctamente. ¡Bienvenido al mundial!'
+        // 1. Obtener los dorsales ya ocupados por los pilotos de la IA en la categoría KARTING para esta partida
+        $pilotosIaKarting = $em->getRepository(PilotoIa::class)->findBy([
+            'partida' => $partida,
+            'categoria' => 'Karting'
         ]);
 
-    } catch (\Exception $e) {
-        return new JsonResponse(['success' => false, 'message' => 'Error al guardar el dorsal: ' . $e->getMessage()], 500);
+        $numerosOcupados = [];
+        foreach ($pilotosIaKarting as $pilotoIa) {
+            $numerosOcupados[] = $pilotoIa->getNumeroDorsal();
+        }
+
+        // Ordenamos los números ocupados de menor a mayor
+        sort($numerosOcupados);
+
+        return $this->render('career/choose_number.html.twig', [
+            'partidaId' => $partidaId,
+            'numerosOcupados' => $numerosOcupados
+        ]);
     }
-}
+
+    #[Route('/api/career/save-number', name: 'api_career_save_number', methods: ['POST'])]
+    public function saveNumber(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $partidaId = (int)$request->request->get('partidaId');
+        $numeroElegido = (int)$request->request->get('numero');
+
+        if ($numeroElegido < 1 || $numeroElegido > 99) {
+            return new JsonResponse(['success' => false, 'message' => 'El número debe estar entre 1 y 99.'], 400);
+        }
+
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        if (!$partida) {
+            return new JsonResponse(['success' => false, 'message' => 'Partida no encontrada.'], 404);
+        }
+
+        // 2. Validar que el número no esté ocupado por la IA en Karting de esta partida
+        $dorsalOcupado = $em->getRepository(PilotoIa::class)->findOneBy([
+            'partida' => $partida,
+            'categoria' => 'Karting',
+            'numeroDorsal' => $numeroElegido
+        ]);
+
+        if ($dorsalOcupado) {
+            return new JsonResponse(['success' => false, 'message' => 'Este dorsal ya está ocupado por otro piloto de la parrilla.'], 400);
+        }
+
+        try {
+            // 3. Buscar el PilotoUsuario (jugador real) de esta partida y actualizar su dorsal
+            $pilotoUsuario = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
+            if (!$pilotoUsuario) {
+                return new JsonResponse(['success' => false, 'message' => 'No se encontró el piloto del jugador.'], 404);
+            }
+
+            $pilotoUsuario->setNumeroDorsal($numeroElegido);
+            $em->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Dorsal oficial asignado correctamente. ¡Bienvenido al mundial!'
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Error al guardar el dorsal: ' . $e->getMessage()], 500);
+        }
+    }
 }

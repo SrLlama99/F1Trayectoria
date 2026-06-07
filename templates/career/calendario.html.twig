@@ -1,0 +1,132 @@
+{% extends 'base.html.twig' %}
+
+{% set partidaId = partida.idPartida %}
+
+{% block title %}FIA CENTRAL - CALENDARIO DE TEMPORADA
+{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-6xl mx-auto space-y-6">
+
+			<header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900/40 border border-slate-900 p-5 rounded-xl backdrop-blur-sm gap-4">
+				<div>
+					<span class="text-red-500 font-racing text-xs tracking-widest block uppercase">FIA Global Schedule // Season
+						{{ anoActual }}</span>
+					<h1 class="text-2xl font-black font-racing uppercase italic mt-0.5">CALENDARIO DE
+						<span class="text-red-500">CARRERAS</span>
+					</h1>
+				</div>
+				<a href="/career/main/{{ partida.idPartida }}" class="text-xs font-racing uppercase tracking-wider border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded transition-colors">
+					Volver al Paddock
+				</a>
+			</header>
+
+			<div class="flex flex-wrap gap-2 border-b border-slate-900 pb-px font-mono text-xs">
+				{% for cat in categoriesDisponibles|default(['KARTING', 'F3', 'F2', 'F1']) %}
+					{% set esActiva = (categoriaSeleccionada == cat) %}
+					<a href="{{ path('app_career_calendario', { 'partidaId': partida.idPartida, 'categoria': cat }) }}" class="px-5 py-3 border-b-2 font-black tracking-wider transition-all uppercase flex items-center gap-2
+														                    {% if esActiva %}
+														                        border-red-500 text-red-400 bg-red-500/5
+														                    {% else %}
+														                        border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-900/20
+														                    {% endif %}">
+						<span>🏎️</span>
+						{{ cat }}
+						{% if pilotoUsuario and pilotoUsuario.categoria|upper == cat %}
+							<span class="text-[8px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-bold tracking-tighter">TU DIVISIÓN</span>
+						{% endif %}
+					</a>
+				{% endfor %}
+			</div>
+
+			<div class="space-y-3 font-mono">
+				{% for evento in eventos %}
+					{% set esCompletado = (evento.estadoEvento == 'COMPLETADO') %}
+
+					<div class="relative overflow-hidden p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group
+														                    {% if esCompletado %}
+														                        bg-slate-900/10 border-slate-900/60 opacity-75 hover:opacity-100
+														                    {% else %}
+														                        bg-slate-900/30 border-slate-900 hover:border-red-500/30 shadow-md
+														                    {% endif %}">
+
+						<div class="absolute left-0 top-0 bottom-0 w-1 {% if esCompletado %}bg-slate-800{% else %}bg-red-600{% endif %}"></div>
+
+						<div class="flex items-center gap-4 pl-2">
+							<div class="w-10 h-10 rounded-lg flex flex-col items-center justify-center font-black border
+									    {% if esCompletado %}bg-slate-950 border-slate-900 text-slate-500{% else %}bg-red-950/20 border-red-900/40 text-red-400{% endif %}">
+								<span class="text-[9px] uppercase tracking-tighter text-slate-500 leading-none">RND</span>
+								<span
+									class="text-base font-racing leading-none mt-0.5">
+									{# Si el número tiene un solo dígito, le concatenamos el 0; si tiene 2, lo dejamos tal cual #}
+									{% if evento.ordenCarrera < 10 %}
+										0{{ evento.ordenCarrera }}
+									{% else %}
+										{{ evento.ordenCarrera }}
+									{% endif %}
+								</span>
+							</div>
+
+							<div class="space-y-0.5">
+								<h3 class="text-sm font-bold text-slate-100 group-hover:text-white transition-colors">
+									{{ evento.circuito.nombreCircuito|default('Gran Premio Sin Registrar') }}
+								</h3>
+								<div
+									class="text-xs text-slate-400 flex items-center gap-2">
+
+									{# 🏁 RENDERIZADO DINÁMICO DE LA BANDERA DESDE FLAGCDN #}
+									{% if evento.circuito.pais and evento.circuito.pais.banderaUrl %}
+										<img src="{{ evento.circuito.pais.banderaUrl }}" srcset="{{ evento.circuito.pais.banderaUrl }} 2x" width="20" alt="{{ evento.circuito.pais.nombrePais }}" class="rounded-sm shadow-sm inline-block border border-slate-800">
+									{% else %}
+										<span>🏁</span>
+									{% endif %}
+
+									<span>{{ evento.circuito.pais.nombrePais|default('Región FIA') }}</span>
+									<span class="text-slate-600">•</span>
+									<span class="text-[11px] text-slate-500 uppercase font-mono">Clima:
+										{{ evento.climaPrevisto }}</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="flex items-center justify-between sm:justify-end gap-4 border-t border-slate-900/60 sm:border-t-0 pt-3 sm:pt-0 pl-2 sm:pl-0">
+
+							<div>
+								{% if esCompletado %}
+									<span class="text-[9px] font-black uppercase tracking-wider bg-slate-900 text-slate-400 border border-slate-800 px-2.5 py-1 rounded">
+										🏁 COMPLETADO
+									</span>
+								{% else %}
+									<span class="text-[9px] font-black uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 py-1 rounded animate-pulse">
+										🟢 PRÓXIMO RETO
+									</span>
+								{% endif %}
+							</div>
+
+							<div>
+								{% if esCompletado %}
+									{# Enlace directo a los resultados previos que acabas de programar #}
+									<a href="{{ path('app_career_resultados', { 'partidaId': partida.idPartida, 'categoria': evento.categoria, 'ano': evento.anoSimulacion, 'eventoId': evento.id }) }}" class="text-[11px] font-racing uppercase tracking-wider bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-cyan-400 px-3 py-2 rounded transition-all">
+										Ver Telemetría
+									</a>
+								{% else %}
+									<span class="text-[10px] text-slate-600 uppercase tracking-tight italic">
+										Sesiones Cerradas
+									</span>
+								{% endif %}
+							</div>
+
+						</div>
+					</div>
+				{% else %}
+					<div class="border border-dashed border-slate-900 p-12 rounded-xl text-center text-xs text-slate-500 uppercase tracking-wider">
+						🛰️ No se han generado los emparejamientos del calendario oficial de la FIA para la división
+						{{ categoriaSeleccionada }}.
+					</div>
+				{% endfor %}
+			</div>
+
+		</div>
+	</div>
+{% endblock %}

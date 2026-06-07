@@ -1,0 +1,556 @@
+{% extends 'base.html.twig' %}
+{% set partidaId = partida.idPartida %}
+{% block title %}FIA CENTRAL - PERFIL DE PILOTO
+{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div
+			class="max-w-7xl mx-auto space-y-6">
+
+			<!-- HEADER / INFORMACIÓN GENERAL DEL PILOTO -->
+			<header class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/20 border border-slate-900 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
+				<div class="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+				<div
+					class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+
+					<!-- Avatar, Licencia y Datos del Piloto -->
+					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1">
+						<div class="relative flex-shrink-0">
+							<div class="w-20 h-20 bg-slate-950 border-2 border-cyan-500 rounded-xl flex flex-col items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.15)] overflow-hidden">
+								<span class="text-2xl font-mono font-black text-cyan-400 tracking-tighter uppercase leading-none mb-1">
+									{{ piloto.abreviatura|default(piloto.apellido|slice(0, 3))|upper }}
+								</span>
+							</div>
+							<span class="absolute -bottom-2 -right-2 bg-red-500 text-slate-950 font-racing font-black text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider shadow-md">
+								#{{ piloto.numeroDorsal }}
+							</span>
+						</div>
+
+						<div class="space-y-1">
+							<div
+								class="flex items-center gap-2 flex-wrap">
+								<!-- Cambiamos el texto dinámicamente si es IA o Humano -->
+								<span class="text-red-500 font-racing text-xs tracking-widest block uppercase">
+									{{ esHumano ? 'Licencia FIA Oficial' : 'Registro de Piloto IA' }}
+								</span>
+								<span class="text-slate-500 font-mono text-[10px] bg-slate-950 px-2 py-0.5 rounded border border-slate-900">PILOT_ID: #{{ piloto.id }}</span>
+							</div>
+
+							<h1 class="text-3xl font-black font-racing uppercase italic tracking-wide text-white">
+								{{ piloto.nombre }}
+								<span class="text-cyan-400">{{ piloto.apellido }}</span>
+							</h1>
+
+							<div class="text-xs font-mono text-slate-400 flex items-center flex-wrap gap-x-3 gap-y-1">
+								<div class="flex items-center gap-1.5 bg-slate-950/40 px-2 py-0.5 rounded border border-slate-900">
+									{% if piloto.pais and piloto.pais.banderaUrl %}
+										<img src="{{ piloto.pais.banderaUrl }}" alt="{{ piloto.pais.nombrepais }}" class="w-4 h-3.5 object-cover rounded-sm border border-slate-800">
+									{% else %}
+										<span class="text-[11px]">🌍</span>
+									{% endif %}
+									<span class="text-white font-medium text-[11px]">{{ piloto.pais.nombrepais|default('Internacional') }}</span>
+								</div>
+
+								<span class="text-slate-700">|</span>
+
+								<span class="flex items-center gap-1">
+									🎂 Edad:
+									<span class="text-white font-bold">{{ piloto.edad|default('--') }}
+										años</span>
+								</span>
+
+								<span class="text-slate-700">|</span>
+
+								<span class="flex items-center gap-1">
+									🏎️ Categoría:
+									<span class="text-amber-400 font-bold uppercase tracking-wider text-[11px]">{{ piloto.categoriaActual|default(piloto.categoria)|upper }}</span>
+								</span>
+							</div>
+							<button onclick="openEditModal()" class="flex items-center gap-2 bg-slate-950/80 hover:bg-cyan-950/40 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-400 font-mono text-[11px] uppercase tracking-widest px-3 py-2 rounded-xl transition-all shadow-md">
+								⚙️ Modificar Registro (200€)
+							</button>
+						</div>
+					</div>
+
+					<!-- Caja de Media General del Piloto (OVR) -->
+					<div class="flex-shrink-0 self-start sm:self-center bg-gradient-to-br from-slate-950 to-slate-900 border-2 border-slate-800 p-3 px-5 rounded-xl flex items-center gap-4 shadow-lg min-w-[140px]">
+						<div class="text-left font-mono">
+							<span class="text-[9px] text-slate-500 block uppercase font-bold tracking-wider leading-none">Global</span>
+							<span class="text-xs font-racing text-cyan-400/80 font-bold uppercase tracking-wide">Rating</span>
+						</div>
+						<div class="w-12 h-12 rounded-lg bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center font-racing font-black text-2xl text-white tracking-wide shadow-[inner_0_0_10px_rgba(6,182,212,0.2)]">
+							{{ mediaStats }}
+						</div>
+					</div>
+
+					<!-- Bloque de Nivel, Experiencia y Finanzas (Condicionado a si es HUMANO) -->
+					<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 font-mono text-xs w-full lg:w-auto md:max-w-md lg:max-w-none">
+						{% if esHumano %}
+							<!-- Nivel -->
+							<div class="bg-slate-950/80 border border-slate-900 rounded-xl p-3 flex flex-col justify-between">
+								<span class="text-slate-500 text-[9px] uppercase tracking-wider block">Rango de Piloto</span>
+								<div class="mt-1 flex items-baseline gap-1">
+									<span class="text-xl font-black font-racing text-cyan-400">LVL
+										{{ piloto.nivelActual }}</span>
+								</div>
+								<div class="w-full bg-slate-900 h-1 rounded-full mt-2 overflow-hidden">
+									{% set porcentajeExp = (piloto.expActual / 1000) * 100 %}
+									<div class="bg-cyan-500 h-full transition-all" style="width: {{ porcentajeExp }}%"></div>
+								</div>
+							</div>
+
+							<!-- Fondos -->
+							<div class="bg-slate-950/80 border border-slate-900 rounded-xl p-3 flex flex-col justify-between">
+								<span class="text-slate-500 text-[9px] uppercase tracking-wider block">Capital</span>
+								<div class="mt-2 text-base font-black text-emerald-400 font-mono">
+									{{ piloto.dinero|number_format(0, ',', '.') }}
+									€
+								</div>
+							</div>
+
+							<!-- Estilo de Vida -->
+							<div class="bg-slate-950/80 border border-slate-900 rounded-xl p-3 col-span-2 sm:col-span-1 flex flex-col justify-between">
+								<span class="text-slate-500 text-[9px] uppercase tracking-wider block">Estilo de Vida</span>
+								<div class="mt-1 flex items-center gap-1.5">
+									<span class="text-sm">
+										{% if piloto.estiloDeVida >= 15 %}🏢{% elseif piloto.estiloDeVida >= 7 %}🏠{% else %}⛺
+										{% endif %}
+									</span>
+									<span class="text-sm font-bold text-slate-200">{{ piloto.estiloDeVida }}%</span>
+								</div>
+								<span class="text-[8px] text-slate-600 block mt-1 uppercase tracking-tight">Estatus del Paddock</span>
+							</div>
+						{% else %}
+							<!-- Vista reducida o de datos alternativos para los pilotos IA -->
+							<div class="bg-slate-950/80 border border-slate-900 rounded-xl p-4 col-span-3 flex items-center justify-center text-slate-500 text-center font-mono italic text-[11px]">
+								🔒 Datos financieros privados y contratos protegidos bajo normativa FIA.
+							</div>
+						{% endif %}
+					</div>
+
+				</div>
+			</header>
+
+			<!-- SISTEMA DE PESTAÑAS -->
+			<nav class="flex border-b border-slate-900 gap-2 font-racing text-xs font-bold tracking-widest uppercase">
+				<button onclick="switchTab('habilidades')" id="tab-habilidades" class="tab-btn px-6 py-3 border-b-2 border-cyan-400 text-cyan-400 transition-all bg-slate-900/20 rounded-t-lg">
+					📊 Habilidades
+				</button>
+				<button onclick="switchTab('estadisticas')" id="tab-estadisticas" class="tab-btn px-6 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all">
+					📈 Estadísticas
+				</button>
+				<button onclick="switchTab('contrato')" id="tab-contrato" class="tab-btn px-6 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all">
+					💼 Contrato
+				</button>
+				<button onclick="switchTab('trofeos')" id="tab-trofeos" class="tab-btn px-6 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all">
+					🏆 Trofeos
+				</button>
+				{% if esHumano %}
+					<button onclick="switchTab('logros')" id="tab-logros" class="tab-btn px-6 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all">
+						✨ Logros
+					</button>
+				{% endif %}
+			</nav>
+
+			<main class="bg-slate-900/20 border border-slate-900 p-6 rounded-2xl backdrop-blur-sm shadow-inner min-h-[400px]">
+
+				<div id="content-habilidades" class="tab-content grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div class="bg-slate-900 border border-slate-800/60 p-5 rounded-xl space-y-4">
+						<h3 class="text-xs font-racing text-slate-400 uppercase tracking-wider mb-2">// Atributos en Pista</h3>
+
+						{# Mapeo de Skills tal y como se pintan en main #}
+						<div>
+							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
+								<span>Clasificación</span>
+								<span class="text-white font-bold">{{ piloto.statClasificacion }}</span>
+							</div>
+							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statClasificacion }}%"></div>
+							</div>
+						</div>
+
+						<div>
+							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
+								<span>Ritmo de Carrera</span>
+								<span class="text-white font-bold">{{ piloto.statRitmo }}</span>
+							</div>
+							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statRitmo }}%"></div>
+							</div>
+						</div>
+
+						<div>
+							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
+								<span>Consistencia</span>
+								<span class="text-white font-bold">{{ piloto.statConsistencia }}</span>
+							</div>
+							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statConsistencia }}%"></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="bg-slate-900 border border-slate-800/60 p-5 rounded-xl space-y-4">
+						<h3 class="text-xs font-racing text-slate-400 uppercase tracking-wider mb-2">// Atributos Tácticos</h3>
+
+						<div>
+							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
+								<span>Adelantamiento</span>
+								<span class="text-white font-bold">{{ piloto.statAdelantamiento }}</span>
+							</div>
+							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statAdelantamiento }}%"></div>
+							</div>
+						</div>
+
+						<div>
+							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
+								<span>Defensa</span>
+								<span class="text-white font-bold">{{ piloto.statDefensa }}</span>
+							</div>
+							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statDefensa }}%"></div>
+							</div>
+						</div>
+
+						<div>
+							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
+								<span>Gestión de Neumáticos</span>
+								<span class="text-white font-bold">{{ piloto.statGestionNeumaticos }}</span>
+							</div>
+							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statGestionNeumaticos }}%"></div>
+							</div>
+						</div>
+
+						<div>
+							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
+								<span>Conducción en Mojado</span>
+								<span class="text-white font-bold">{{ piloto.statMojado }}</span>
+							</div>
+							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
+								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statMojado }}%"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="content-estadisticas" class="tab-content hidden grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
+					<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center">
+						<span class="text-slate-500 text-[10px] uppercase block mb-1">Carreras Disputadas</span>
+						<span class="text-2xl font-black text-white font-racing">{{ estadisticas.carrerasTotales|default(0) }}</span>
+					</div>
+					<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center">
+						<span class="text-slate-500 text-[10px] uppercase block mb-1">Victorias (P1)</span>
+						<span class="text-2xl font-black text-amber-400 font-racing">{{ estadisticas.victorias|default(0) }}</span>
+					</div>
+					<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center">
+						<span class="text-slate-500 text-[10px] uppercase block mb-1">Podios Totales</span>
+						<span class="text-2xl font-black text-cyan-400 font-racing">{{ estadisticas.podios|default(0) }}</span>
+					</div>
+					<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center">
+						<span class="text-slate-500 text-[10px] uppercase block mb-1">Pole Positions</span>
+						<span class="text-2xl font-black text-purple-400 font-racing">{{ estadisticas.poles|default(0) }}</span>
+					</div>
+					<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center col-span-2">
+						<span class="text-slate-500 text-[10px] uppercase block mb-1">Vueltas Rápidas</span>
+						<span class="text-2xl font-black text-sky-400 font-racing">{{ estadisticas.vueltasRapidas|default(0) }}</span>
+					</div>
+					<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center col-span-2">
+						<span class="text-slate-500 text-[10px] uppercase block mb-1">Puntos Históricos</span>
+						<span class="text-2xl font-black text-emerald-400 font-racing">{{ estadisticas.puntosTotales|default(0) }}
+							PTS</span>
+					</div>
+				</div>
+
+				<!-- APARTADO 5: INFORMACIÓN DEL CONTRATO (Corregido con campos reales) -->
+				<div id="content-contrato" class="tab-content hidden animate-fadeIn">
+					<div
+						class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+						<!-- Tarjeta de la Escudería -->
+						<div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 p-5 rounded-xl shadow-xl">
+							<span class="text-[9px] font-mono text-cyan-400 uppercase tracking-widest">// Equipo Actual</span>
+							<h3 class="text-xl font-black font-racing text-white uppercase mt-1">
+								{{ contrato ? contrato.escuderia.nombreOficial : 'Agente Libre' }}
+							</h3>
+
+							<div class="mt-6 pt-4 border-t border-slate-900 font-mono text-xs space-y-2">
+								<div class="flex justify-between">
+									<span class="text-slate-500">Rol en el equipo:</span>
+									<span class="text-amber-400 font-bold uppercase">
+										{{ contrato ? (contrato.numeroAsiento == 1 ? 'Primer Piloto' : 'Segundo Piloto') : 'N/A' }}
+									</span>
+								</div>
+							</div>
+						</div>
+
+						<!-- Detalles Financieros y Vigencia -->
+						<div
+							class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+							<!-- Sueldo Anual (Campo real) -->
+							<div class="bg-slate-900 border border-slate-800/60 p-4 rounded-xl flex items-center gap-4">
+								<div class="text-2xl bg-slate-950 w-12 h-12 rounded-lg border border-slate-800 flex items-center justify-center">💰</div>
+								<div class="font-mono">
+									<span class="text-slate-500 text-[10px] uppercase block">Salario Anual</span>
+									<span class="text-lg font-black text-emerald-400">
+										{{ contrato ? contrato.sueldoAnual|number_format(0, ',', '.') ~ ' €' : '0 €' }}
+									</span>
+								</div>
+							</div>
+
+							<!-- Duración (Campo real: duracionContratoAnos) -->
+							<div class="bg-slate-900 border border-slate-800/60 p-4 rounded-xl flex items-center gap-4">
+								<div class="text-2xl bg-slate-950 w-12 h-12 rounded-lg border border-slate-800 flex items-center justify-center">⏳</div>
+								<div class="font-mono">
+									<span class="text-slate-500 text-[10px] uppercase block">Duración del contrato</span>
+									<span class="text-lg font-black text-white">
+										{{ contrato ? contrato.duracionContratoAnos ~ ' Años' : 'Sin contrato' }}
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="content-trofeos" class="tab-content hidden">
+					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+						{% for trofeo in trofeos %}
+							<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-4">
+								<div class="text-3xl bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+									🏆
+								</div>
+								<div>
+									<h4 class="font-racing text-xs font-bold uppercase text-white">{{ trofeo.nombreCampeonato }}</h4>
+									<p class="text-[10px] font-mono text-slate-500 mt-0.5">Año de simulación:
+										{{ trofeo.anoSimulacion }}</p>
+									<span class="inline-block mt-1 text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded uppercase font-bold">Campeón Mundial</span>
+								</div>
+							</div>
+						{% else %}
+							<div class="col-span-full text-center py-12 text-slate-500 font-mono text-xs">
+								❌ Todavía no has ganado ningún campeonato oficial de la FIA en esta trayectoria.
+							</div>
+						{% endfor %}
+					</div>
+				</div>
+
+				<div id="content-logros" class="tab-content hidden">
+					<div class="bg-slate-900/40 border border-slate-850 p-4 rounded-xl font-mono text-white mt-6">
+						<div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-4">
+							<div>
+								<span class="text-[9px] text-cyan-400 font-bold uppercase tracking-widest block">Driver Achievements</span>
+								<h3 class="text-xs font-black uppercase tracking-wider text-slate-200">Objetivos de Trayectoria</h3>
+							</div>
+							{# Contador dinámico de progreso #}
+							{% set totalLogros = catalogoLogros|length %}
+							{% set conseguidos = 0 %}
+							{% for logro in catalogoLogros %}
+								{% if logrosCompradosIds is defined and logro.id in logrosCompradosIds %}
+									{% set conseguidos = conseguidos + 1 %}
+								{% endif %}
+							{% endfor %}
+							<span class="text-[10px] bg-slate-950 border border-slate-800 px-2 py-0.5 rounded-full font-bold text-cyan-400">
+								{{ conseguidos }}/{{ totalLogros }}
+							</span>
+						</div>
+
+						<div class="space-y-2.5">
+							{% for logro in catalogoLogros %}
+								{% set yaConseguido = logrosCompradosIds is defined and logro.id in logrosCompradosIds %}
+
+								<div class="flex items-center gap-3 p-2.5 rounded-lg border transition-all duration-300
+										                {% if yaConseguido %}
+										                    bg-cyan-950/20 border-cyan-500/30 shadow-md shadow-cyan-950/10
+										                {% else %}
+										                    bg-slate-950/40 border-slate-900 opacity-35 grayscale select-none
+										                {% endif %}">
+
+									<div class="w-9 h-9 rounded-md bg-slate-900 border border-slate-800 flex items-center justify-center text-xl shrink-0">
+										{{ logro.icono }}
+									</div>
+
+									<div class="flex-1 min-w-0">
+										<div class="flex items-center justify-between">
+											<h4 class="text-xs font-bold truncate {% if yaConseguido %}text-cyan-400 uppercase{% else %}text-slate-400{% endif %}">
+												{{ logro.nombre }}
+											</h4>
+											{% if yaConseguido %}
+												<span class="text-[8px] tracking-tight bg-cyan-500 text-slate-950 px-1 py-0.2 rounded font-black uppercase">Desbloqueado</span>
+											{% else %}
+												<span class="text-[8px] tracking-tight bg-slate-900 text-slate-600 px-1 py-0.2 rounded font-bold uppercase">Bloqueado</span>
+											{% endif %}
+										</div>
+										<p class="text-[10px] text-slate-400 leading-tight mt-0.5">
+											{{ logro.descripcion }}
+										</p>
+									</div>
+
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+
+			</main>
+		</div>
+	</div>
+
+	<div id="edit-pilot-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-fadeIn">
+		<div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl relative font-mono text-xs text-slate-300">
+
+			<div class="flex justify-between items-start border-b border-slate-800 pb-3 mb-4">
+				<div>
+					<span class="text-red-500 font-racing text-[10px] tracking-widest block uppercase">// MODIFICACIÓN DE FICHA REGLAMENTARIA</span>
+					<h3 class="text-base font-black font-racing text-white uppercase mt-0.5">Editar Datos del Piloto</h3>
+				</div>
+				<button onclick="closeEditModal()" class="text-slate-500 hover:text-white transition-colors text-sm">✕</button>
+			</div>
+
+			<div id="modal-error-alert" class="hidden bg-red-950/40 border border-red-900/50 text-red-400 p-2.5 rounded-lg mb-4 text-[11px]"></div>
+
+			<form id="edit-pilot-form" onsubmit="submitPilotEdit(event)">
+				<div class="space-y-4">
+					<div class="grid grid-cols-2 gap-3">
+						<div>
+							<label class="block text-slate-500 text-[10px] uppercase mb-1">Nombre</label>
+							<input type="text" id="edit-nombre" name="nombre" value="{{ piloto.nombre }}" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-cyan-500 transition-colors">
+						</div>
+						<div>
+							<label class="block text-slate-500 text-[10px] uppercase mb-1">Apellido</label>
+							<input type="text" id="edit-apellido" name="apellido" value="{{ piloto.apellido }}" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-cyan-500 transition-colors">
+						</div>
+					</div>
+
+					<div class="grid grid-cols-2 gap-3">
+						<div>
+							<label class="block text-slate-500 text-[10px] uppercase mb-1">Abreviatura (3 Siglas)</label>
+							<input type="text" id="edit-abreviatura" name="abreviatura" value="{{ piloto.abreviatura|default(piloto.apellido|slice(0, 3))|upper }}" maxlength="3" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white uppercase font-bold tracking-widest focus:outline-none focus:border-cyan-500 transition-colors">
+						</div>
+						<div>
+							<label class="block text-slate-500 text-[10px] uppercase mb-1">Dorsal Competitivo</label>
+							<input type="number" id="edit-dorsal" name="numeroDorsal" value="{{ piloto.numeroDorsal }}" required {{ esHumano ? 'disabled title="Dorsal de licencia fija en piloto humano"' : '' }} class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-cyan-500 transition-colors disabled:opacity-40">
+						</div>
+					</div>
+
+					<div>
+						<label class="block text-slate-500 text-[10px] uppercase mb-1">País / Nacionalidad</label>
+						<select id="edit-pais" name="paisId" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-cyan-500 transition-colors">
+
+							{% if piloto.pais %}
+								<option value="{{ piloto.pais.id }}" selected>{{ piloto.pais.nombrepais }}</option>
+							{% endif %}
+							{% for pais in paises %}
+								<option value="{{ pais.id }}" selected>{{ pais.nombrePais }}</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<div class="bg-slate-950/60 border border-slate-900 rounded-xl p-3 flex justify-between items-center mt-2">
+						<span class="text-[10px] text-slate-500 uppercase">Coste de Tramitación FIA</span>
+						<span class="text-sm font-black text-amber-500 font-mono">- 200 €</span>
+					</div>
+
+					<div class="flex gap-2 pt-2">
+						<button type="button" onclick="closeEditModal()" class="w-1/2 border border-slate-800 hover:bg-slate-900 text-slate-400 py-2 rounded-lg transition-colors font-racing uppercase tracking-wider text-[11px]">Cancelar</button>
+						<button type="submit" id="submit-edit-btn" class="w-1/2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 py-2 rounded-lg transition-colors font-racing font-black uppercase tracking-wider text-[11px]">Confirmar Cambios</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script>
+		function switchTab(tabName) { // Ocultar todos los contenidos
+document.querySelectorAll('.tab-content').forEach(content => {
+content.classList.add('hidden');
+});
+
+// Quitar estilos activos de todos los botones
+document.querySelectorAll('.tab-btn').forEach(btn => {
+btn.classList.remove('border-cyan-400', 'text-cyan-400', 'bg-slate-900/20', 'rounded-t-lg');
+btn.classList.add('border-transparent', 'text-slate-400');
+});
+
+// Mostrar contenido seleccionado
+document.getElementById('content-' + tabName).classList.remove('hidden');
+
+// Activar botón seleccionado
+const activeBtn = document.getElementById('tab-' + tabName);
+activeBtn.classList.remove('border-transparent', 'text-slate-400');
+activeBtn.classList.add('border-cyan-400', 'text-cyan-400', 'bg-slate-900/20', 'rounded-t-lg');
+}
+
+// Navegación secundaria para los sub-paneles de categorías estadísticas
+function switchSubCategoria(catName) { // Ocultar todos los sub-paneles
+document.querySelectorAll('.subcat-pane').forEach(pane => {
+pane.classList.add('hidden');
+});
+
+// Resetear los estilos de todos los botones de subcategoría
+document.querySelectorAll('.subcat-btn').forEach(btn => {
+btn.classList.remove('bg-cyan-500/10', 'text-cyan-400', 'border-cyan-500/30', 'font-bold');
+btn.classList.add('bg-slate-950/40', 'text-slate-500', 'border-slate-900');
+});
+
+// Mostrar el panel de la categoría seleccionada
+document.getElementById('pane-cat-' + catName).classList.remove('hidden');
+
+// Asignar los estilos activos al botón seleccionado
+const activeBtn = document.getElementById('btn-cat-' + catName);
+activeBtn.classList.remove('bg-slate-950/40', 'text-slate-500', 'border-slate-900');
+activeBtn.classList.add('bg-cyan-500/10', 'text-cyan-400', 'border-cyan-500/30', 'font-bold');
+}
+
+function openEditModal() {
+document.getElementById('edit-pilot-modal').classList.remove('hidden');
+document.getElementById('modal-error-alert').classList.add('hidden');
+}
+
+function closeEditModal() {
+document.getElementById('edit-pilot-modal').classList.add('hidden');
+}
+
+function submitPilotEdit(event) {
+event.preventDefault();
+
+const form = document.getElementById('edit-pilot-form');
+const submitBtn = document.getElementById('submit-edit-btn');
+const errorAlert = document.getElementById('modal-error-alert');
+
+submitBtn.disabled = true;
+submitBtn.innerText = "PROCESANDO TRANSACCIÓN...";
+errorAlert.classList.add('hidden');
+
+const formData = new FormData(form);
+
+// Generamos la URL dinámica de destino apuntando al controlador
+const url = "{{ path('app_career_profile_update', { 'partidaId': partida.idPartida, 'idPilotoIa': piloto.id ? piloto.id : 0 }) }}";
+
+fetch(url, {
+method: 'POST',
+body: formData,
+headers: {
+'X-Requested-With': 'XMLHttpRequest'
+}
+}).then(response => response.json()).then(data => {
+if (data.success) { // Recargar la página para visualizar la actualización estética de la ficha oficial
+window.location.reload();
+} else {
+errorAlert.innerText = data.message;
+errorAlert.classList.remove('hidden');
+submitBtn.disabled = false;
+submitBtn.innerText = "Confirmar Cambios";
+}
+}).catch(error => {
+errorAlert.innerText = "Error crítico de red o de comunicación con el Paddock.";
+errorAlert.classList.remove('hidden');
+submitBtn.disabled = false;
+submitBtn.innerText = "Confirmar Cambios";
+});
+}
+	</script>
+{% endblock %}

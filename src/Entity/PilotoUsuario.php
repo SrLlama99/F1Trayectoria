@@ -78,6 +78,12 @@ class PilotoUsuario
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
     private int $jugadasCasino = 0; // Controla el número de apuestas/manos jugadas en la semana/día
 
+    #[ORM\Column(type: 'string', length: 30, options: ['default' => 'MASCULINO'])]
+    private string $genero = 'MASCULINO'; // MASCULINO, FEMENINO, NO_BINARIO
+
+    #[ORM\Column(type: 'string', length: 30, options: ['default' => 'HETEROSEXUAL'])]
+    private string $preferenciaSexual = 'HETEROSEXUAL'; // HETEROSEXUAL, HOMOSEXUAL, BISEXUAL, PANSEXUAL
+
     public function getId(): ?int
     {
         return $this->id;
@@ -324,4 +330,10 @@ class PilotoUsuario
         $this->jugadasCasino = 0;
         return $this;
     }
+
+    public function getGenero(): string { return $this->genero; }
+    public function setGenero(string $genero): self { $this->genero = strtoupper($genero); return $this; }
+
+    public function getPreferenciaSexual(): string { return $this->preferenciaSexual; }
+    public function setPreferenciaSexual(string $preferencia): self { $this->preferenciaSexual = strtoupper($preferencia); return $this; }
 }

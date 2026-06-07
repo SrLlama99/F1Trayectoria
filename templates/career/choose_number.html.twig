@@ -94,8 +94,8 @@ function enviarDorsal() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // El proceso ha terminado con total éxito. Mandamos al jugador al paddock oficial del juego
-            window.location.href = "/dashboard";
+            // CAMBIO: Ahora redirige al menú principal de la partida del modo trayectoria recién creada
+            window.location.href = "/career/main/{{ partidaId }}";
         } else {
             alert("RECHAZADO POR COMISARIOS: " + data.message);
             btnConfirmar.disabled = false;
@@ -103,8 +103,8 @@ function enviarDorsal() {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert("Pérdida de telemetría de red con la base de datos.");
+        console.error("Error:", error);
+        alert("CRÍTICO: Error de telemetría con la central de la FIA.");
         btnConfirmar.disabled = false;
         btnConfirmar.innerText = "CONFIRMAR E INICIAR TRAYECTORIA";
     });

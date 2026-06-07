@@ -9,6 +9,9 @@ use App\Entity\CalendarioTemporada;
 use App\Entity\ResultadosCarreras;
 use App\Entity\ContratoMercado;
 use App\Entity\Escuderia;
+use App\Entity\Pais;
+use App\Entity\Logro;
+use App\Entity\LogroPartida;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -61,13 +64,11 @@ class MainCareerController extends AbstractController
                 $nombreCircuito = 'Trazado Urbano';
             }
 
-            $diaVigente = method_exists($carreraEntidad, 'getDia') ? $carreraEntidad->getDia() : $carreraEntidad->getOrdenCarrera();
-
             $agendaFormateada[] = [
                 'ordenCarrera'   => $carreraEntidad->getOrdenCarrera(),
                 'nombre'         => $nombreGP,
                 'circuitoNombre' => $nombreCircuito,
-                'dia'            => $diaVigente,
+                'semana'            => $carreraEntidad->getSemanaCarrera(),
                 'banderaUrl'     => $banderaUrl
             ];
         }
@@ -272,7 +273,7 @@ class MainCareerController extends AbstractController
 
         // Recuperamos los datos reales de la base de datos para filtrar en memoria
         $todosLosPilotos = $em->getRepository(PilotoIa::class)->findBy(['partida' => $partida]);
-        $todasLasEscuderias = $em->getRepository(Escuderia::class)->findAll(); 
+        $todasLasEscuderias = $em->getRepository(Escuderia::class)->findAll();
 
         $pilotosFiltrados = [];
         $escuderiasFiltrados = [];
@@ -302,6 +303,7 @@ class MainCareerController extends AbstractController
                     $p->getStatMojado()) / 7;
 
                 $pilotosJson[] = [
+                    'id' => $p->getId(),
                     'nombre' => $p->getNombre(),
                     'apellido' => $p->getApellido(),
                     'categoria' => $p->getCategoria(),
@@ -310,11 +312,12 @@ class MainCareerController extends AbstractController
             }
 
             // 🟢 CORREGIDO: Inicializar el array completamente limpio
-            $escuderiasJson = []; 
-            
+            $escuderiasJson = [];
+
             // 🟢 CORREGIDO: Recorrer el array de "$escuderiasFiltrados", NO "$escuderiasJson"
-            foreach ($escuderiasFiltrados as $e) { 
+            foreach ($escuderiasFiltrados as $e) {
                 $escuderiasJson[] = [
+                    'id' => $e->getId(),
                     'nombreOficial' => $e->getNombreOficial(),
                     'categoria' => $e->getCategoria()
                 ];
@@ -333,5 +336,256 @@ class MainCareerController extends AbstractController
             'pilotos' => $pilotosFiltrados,
             'escuderias' => $escuderiasFiltrados,
         ]);
+    }
+
+    #[Route('/career/profile/{partidaId}/{idPilotoIa}', name: 'app_career_profile', defaults: ['idPilotoIa' => null], methods: ['GET'])]
+    public function profile(int $partidaId, ?int $idPilotoIa, EntityManagerInterface $em): Response
+    {
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        if (!$partida || $partida->getUsuario() !== $this->getUser()) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+
+        if ($idPilotoIa) {
+            $piloto = $em->getRepository(PilotoIa::class)->find($idPilotoIa);
+            $esHumano = false;
+            if (!$piloto || $piloto->getPartida() !== $partida) {
+                return $this->redirectToRoute('app_career_main', ['partidaId' => $partidaId]);
+            }
+        } else {
+            $piloto = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
+            $esHumano = true;
+        }
+
+        // 1. Media Global de Atributos (Suma de los 6 atributos principales / 6)
+        $sumaStats = $piloto->getStatClasificacion()
+            + $piloto->getStatRitmo()
+            + $piloto->getStatAdelantamiento()
+            + $piloto->getStatDefensa()
+            + $piloto->getStatGestionNeumaticos()
+            + $piloto->getStatMojado();
+
+        $mediaStats = round($sumaStats / 6);
+
+        // 2. Consulta dinámica de Estadísticas por Categoría
+        $qb = $em->getRepository(ResultadosCarreras::class)->createQueryBuilder('r')
+            ->join('r.evento', 'e')
+            ->select('e.categoria AS categoria')
+            ->addSelect('COUNT(r.id) AS carrerasTotales')
+            ->addSelect('SUM(CASE WHEN r.posicionFinal = 1 THEN 1 ELSE 0 END) AS victorias')
+            ->addSelect('SUM(CASE WHEN r.posicionFinal <= 3 THEN 1 ELSE 0 END) AS podios')
+            ->addSelect('SUM(CASE WHEN r.posicionSalida = 1 THEN 1 ELSE 0 END) AS poles')
+            ->addSelect('SUM(CASE WHEN r.vueltaRapida = true OR r.vueltaRapida = 1 THEN 1 ELSE 0 END) AS vueltasRapidas')
+            ->addSelect('SUM(r.puntosObtenidos) AS puntosTotales')
+            ->where('e.partida = :partida')
+            ->setParameter('partida', $partida)
+            ->groupBy('e.categoria');
+
+        if ($esHumano) {
+            $qb->andWhere('r.esJugadorHumano = true');
+        } else {
+            $qb->andWhere('r.esJugadorHumano = false')->andWhere('r.pilotoIa = :pilotoIa')->setParameter('pilotoIa', $piloto);
+        }
+        $resultadosDb = $qb->getQuery()->getResult();
+
+        $estadisticasPorCategoria = [];
+        foreach ($resultadosDb as $row) {
+            $estadisticasPorCategoria[strtoupper($row['categoria'])] = [
+                'carrerasTotales' => (int)$row['carrerasTotales'],
+                'victorias'       => (int)$row['victorias'],
+                'podios'          => (int)$row['podios'],
+                'poles'           => (int)$row['poles'],
+                'vueltasRapidas'  => (int)$row['vueltasRapidas'],
+                'puntosTotales'   => (int)$row['puntosTotales'],
+            ];
+        }
+
+        if (empty($estadisticasPorCategoria)) {
+            $catActual = strtoupper($idPilotoIa ? $piloto->getCategoria() : 'KARTING');
+            $estadisticasPorCategoria[$catActual] = [
+                'carrerasTotales' => 0,
+                'victorias' => 0,
+                'podios' => 0,
+                'poles' => 0,
+                'vueltasRapidas' => 0,
+                'puntosTotales' => 0
+            ];
+        }
+
+        // 3. 🟢 NUEVO: OBTENER CONTRATO ACTIVO DESDE LA BASE DE DATOS
+        // Buscamos el contrato vigente en la tabla ContratoMercado
+        $contratoActivo = $em->getRepository(ContratoMercado::class)->findOneBy([
+            'partida' => $partida,
+            'pilotoIa' => $idPilotoIa ? $piloto : null,
+            // Si es humano, normalmente se vincula dejando pilotoIa en null o usando un campo esHumano en tu entidad
+        ]);
+
+        // Mapeo de respaldo (Fallback) en caso de que esté en pretemporada o sin contrato activo asignado aún
+        if (!$contratoActivo) {
+            $contratoActivo = [
+                'nombreEscuderia' => $idPilotoIa ? 'Agente Libre' : 'Escudería de Desarrollo',
+                'salarioPorCarrera' => $idPilotoIa ? 0 : 2500,
+                'carrerasRestantes' => 8,
+                'rol' => 'Primer Piloto',
+                'clausulaRescision' => $idPilotoIa ? 0 : 15000
+            ];
+        }
+
+        $trofeos = [];
+
+        $catalogoLogros = $em->getRepository(Logro::class)->findAll();
+
+        $logrosObtenidosRaw = $em->getRepository(LogroPartida::class)->findBy([
+            'partida' => $partida
+        ]);
+
+        // 3. Extraemos solo los códigos o identificadores de los logros que YA se han conseguido
+        $logrosCompradosIds = [];
+        foreach ($logrosObtenidosRaw as $logroPartida) {
+            // Reemplaza 'getIdentificador' o 'getCodigo' por el método real de tu entidad LogroPartida
+            $logrosCompradosIds[] = $logroPartida->getId();
+        }
+
+        $paises = $em->getRepository(Pais::class)->findAll();
+
+        return $this->render('career/profile.html.twig', [
+            'partida' => $partida,
+            'piloto' => $piloto,
+            'esHumano' => $esHumano,
+            'mediaStats' => $mediaStats,
+            'estadisticasCategorias' => $estadisticasPorCategoria,
+            'contrato' => $contratoActivo, // 🟢 Enviamos el contrato a la vista
+            'trofeos' => $trofeos,
+            'catalogoLogros' => $catalogoLogros,
+            'logrosCompradosIds' => $logrosCompradosIds,
+            'paises' => $paises
+        ]);
+    }
+
+    #[Route('/career/profile/update/{partidaId}/{idPilotoIa}', name: 'app_career_profile_update', requirements: ['partidaId' => '\d+', 'idPilotoIa' => '\d+'], methods: ['POST'])]
+    public function updateProfile(int $partidaId, int $idPilotoIa, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        if (!$partida || $partida->getUsuario() !== $this->getUser()) {
+            return new JsonResponse(['success' => false, 'message' => 'Acceso denegado o partida inválida.'], Response::HTTP_FORBIDDEN);
+        }
+
+        // El coste se descuenta siempre del capital del jugador humano de la partida
+        $pilotoHumano = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
+        if (!$pilotoHumano || $pilotoHumano->getDinero() < 200) {
+            return new JsonResponse(['success' => false, 'message' => 'Fondos insuficientes en el Paddock. Necesitas 200 €.']);
+        }
+
+        // Determinar qué entidad estamos editando realmente
+        if ($idPilotoIa > 0) {
+            $piloto = $em->getRepository(PilotoIa::class)->find($idPilotoIa);
+            if (!$piloto || $piloto->getPartida() !== $partida) {
+                return new JsonResponse(['success' => false, 'message' => 'Piloto de IA no encontrado en esta escudería/partida.']);
+            }
+
+            // Solo modificamos el dorsal competitivo si es piloto controlado por la IA
+            $nuevoDorsal = (int)$request->request->get('numeroDorsal');
+            if ($nuevoDorsal > 0) {
+                $piloto->setNumeroDorsal($nuevoDorsal);
+            }
+        } else {
+            $piloto = $pilotoHumano;
+        }
+
+        // Validar e inyectar campos comunes
+        $nombre = trim($request->request->get('nombre'));
+        $apellido = trim($request->request->get('apellido'));
+        $abreviatura = strtoupper(trim($request->request->get('abreviatura')));
+
+        if (empty($nombre) || empty($apellido) || strlen($abreviatura) !== 3) {
+            return new JsonResponse(['success' => false, 'message' => 'Datos inválidos. La abreviatura debe constar exactamente de 3 caracteres.']);
+        }
+
+        $piloto->setNombre($nombre);
+        $piloto->setApellido($apellido);
+        $piloto->setAbreviatura($abreviatura);
+
+        $paisId = $request->request->get('paisId');
+        if ($paisId) {
+            $pais = $em->getRepository(Pais::class)->find($paisId);
+            if ($pais) {
+                $piloto->setPais($pais);
+            }
+        }
+
+        // 💶 Cobro reglamentario de la transacción
+        $pilotoHumano->setDinero($pilotoHumano->getDinero() - 200);
+
+        $em->flush();
+
+        return new JsonResponse(['success' => true]);
+    }
+
+    #[Route('/career/escuderia/profile/{partidaId}/{escuderiaId}', name: 'app_career_escuderia_profile', requirements: ['partidaId' => '\d+', 'escuderiaId' => '\d+'], methods: ['GET'])]
+    public function escuderiaProfile(int $partidaId, int $escuderiaId, EntityManagerInterface $em): Response
+    {
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        if (!$partida || $partida->getUsuario() !== $this->getUser()) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+
+        $escuderia = $em->getRepository(Escuderia::class)->find($escuderiaId);
+        if (!$escuderia || $escuderia->getPartida() !== $partida) {
+            return $this->redirectToRoute('app_career_main', ['partidaId' => $partidaId]);
+        }
+
+        // Obtener los pilotos actuales que tienen contrato con esta escudería en la partida
+        $contratos = $em->getRepository(ContratoMercado::class)->findBy([
+            'partida' => $partida,
+            'escuderia' => $escuderia
+        ]);
+
+        $pilotoHumano = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
+
+        return $this->render('career/escuderia_profile.html.twig', [
+            'partida' => $partida,
+            'escuderia' => $escuderia,
+            'contratos' => $contratos,
+            'pilotoHumano' => $pilotoHumano,
+        ]);
+    }
+
+    #[Route('/career/escuderia/update/{partidaId}/{escuderiaId}', name: 'app_career_escuderia_update', requirements: ['partidaId' => '\d+', 'escuderiaId' => '\d+'], methods: ['POST'])]
+    public function updateEscuderia(int $partidaId, int $escuderiaId, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        if (!$partida || $partida->getUsuario() !== $this->getUser()) {
+            return new JsonResponse(['success' => false, 'message' => 'Acceso denegado.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $pilotoHumano = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
+        if (!$pilotoHumano || $pilotoHumano->getDinero() < 200) {
+            return new JsonResponse(['success' => false, 'message' => 'Fondos insuficientes en el Paddock. Necesitas 200 €.']);
+        }
+
+        $escuderia = $em->getRepository(Escuderia::class)->find($escuderiaId);
+        if (!$escuderia || $escuderia->getPartida() !== $partida) {
+            return new JsonResponse(['success' => false, 'message' => 'Escudería no encontrada.']);
+        }
+
+        $nombreOficial = trim($request->request->get('nombreOficial'));
+        $nombreCorto = strtoupper(trim($request->request->get('nombreCorto')));
+
+        if (empty($nombreOficial) || empty($nombreCorto)) {
+            return new JsonResponse(['success' => false, 'message' => 'Los campos no pueden estar vacíos.']);
+        }
+
+        if (strlen($nombreCorto) > 10) {
+            return new JsonResponse(['success' => false, 'message' => 'La abreviatura no puede superar los 10 caracteres.']);
+        }
+
+        $escuderia->setNombreOficial($nombreOficial);
+        $escuderia->setNombreCorto($nombreCorto);
+
+        // Cobro de los 200€ al piloto humano
+        $pilotoHumano->setDinero($pilotoHumano->getDinero() - 200);
+        $em->flush();
+
+        return new JsonResponse(['success' => true]);
     }
 }

@@ -29,7 +29,13 @@ class CalendarioTemporada
     private ?string $categoria = null; // 'KARTING', 'F3', 'F2', 'F1'
 
     #[ORM\Column(type: 'integer')]
-    private ?int $ordenCarrera = null;
+    private ?int $ordenCarrera = null; // Posición en el calendario (1, 2, 3...)
+
+    // ==========================================
+    // 🏁 ASIGNACIÓN DE SEMANA DE GRAN PREMIO
+    // ==========================================
+    #[ORM\Column(type: 'integer')]
+    private ?int $semanaCarrera = null; // Ej: Semana 12 (GP de Bahréin), Semana 21 (GP de Mónaco)
 
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'SOLEADO'])]
     private string $climaPrevisto = 'SOLEADO';
@@ -53,6 +59,10 @@ class CalendarioTemporada
 
     public function getOrdenCarrera(): ?int { return $this->ordenCarrera; }
     public function setOrdenCarrera(int $orden): self { $this->ordenCarrera = $orden; return $this; }
+
+    // Getter y Setter para la nueva gestión de semanas
+    public function getSemanaCarrera(): ?int { return $this->semanaCarrera; }
+    public function setSemanaCarrera(int $semana): self { $this->semanaCarrera = $semana; return $this; }
 
     public function getClimaPrevisto(): string { return $this->climaPrevisto; }
     public function setClimaPrevisto(string $clima): self { $this->climaPrevisto = $clima; return $this; }

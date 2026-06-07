@@ -60,10 +60,8 @@
 						<span class="text-slate-400 font-bold block text-[10px] font-racing text-slate-500 uppercase">Cronología</span>
 						<span class="text-slate-300 text-[11px]">Año
 							{{ partida.ingameAno }}
-							— Mes
-							{{ partida.ingameMes }}
-							— Día
-							{{ partida.ingameDia }}</span>
+							— Semana
+							{{ partida.ingameSemana }}</span>
 					</div>
 				</div>
 			</header>
@@ -103,7 +101,7 @@
 									<div class="text-right">
 										<span class="text-slate-500 block text-[9px] uppercase font-racing">Cronología</span>
 										<span class="text-slate-300">Día
-											{{ proximaCarrera.dia }}</span>
+											{{ proximaCarrera.semana }}</span>
 									</div>
 								</div>
 
@@ -130,8 +128,8 @@
 
 										<span class="text-slate-300 truncate uppercase text-[11px] font-racing tracking-wide">{{ carrera.nombre }}</span>
 									</div>
-									<span class="text-[10px] text-slate-500 whitespace-nowrap">Día
-										{{ carrera.dia }}</span>
+									<span class="text-[10px] text-slate-500 whitespace-nowrap">Semana
+										{{ carrera.semana }}</span>
 								</div>
 							{% else %}
 								<p class="text-xs text-slate-600 italic font-mono">No hay más carreras programadas.</p>

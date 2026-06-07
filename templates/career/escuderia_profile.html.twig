@@ -1,0 +1,224 @@
+{% extends 'base.html.twig' %}
+{% set partidaId = partida.idPartida %}
+{% block title %}FIA CENTRAL - PERFIL DE ESCUDERÍA{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-7xl mx-auto space-y-6">
+
+			<header class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-900/90 to-amber-950/20 border border-slate-900 p-6 rounded-2xl backdrop-blur-sm shadow-xl">
+				<div class="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+				<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+					<div class="flex flex-col sm:flex-row items-start sm:items-center gap-5 flex-1">
+						<div class="relative flex-shrink-0">
+							<div class="w-20 h-20 bg-slate-950 border-2 border-amber-500 rounded-xl flex items-center justify-center font-racing text-3xl font-black text-amber-400 tracking-tighter shadow-lg uppercase shadow-amber-500/10">
+								{{ escuderia.nombreCorto|slice(0, 2) }}
+							</div>
+							<span class="absolute -bottom-2 -right-2 bg-slate-900 border border-slate-800 text-[9px] font-mono font-bold text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider">TEAM</span>
+						</div>
+
+						<div class="space-y-1.5">
+							<div class="flex items-center gap-3 flex-wrap">
+								<h1 class="text-2xl font-black font-racing uppercase tracking-wide text-white leading-none">{{ escuderia.nombreOficial }}</h1>
+								<span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[10px] uppercase px-2 py-0.5 rounded-md font-bold tracking-widest">{{ escuderia.nombreCorto }}</span>
+							</div>
+
+							<div class="text-xs font-mono text-slate-400 flex items-center flex-wrap gap-x-3 gap-y-1">
+								<div class="flex items-center gap-1.5 bg-slate-950/40 px-2 py-0.5 rounded border border-slate-900">
+									{% if escuderia.pais and escuderia.pais.banderaUrl %}
+										<img src="{{ escuderia.pais.banderaUrl }}" alt="{{ escuderia.pais.nombrepais }}" class="w-4 h-3.5 object-cover rounded-sm border border-slate-800">
+									{% else %}
+										<span class="text-[11px]">🌍</span>
+									{% endif %}
+									<span class="text-white font-medium text-[11px]">{{ escuderia.pais.nombrepais|default('Sede Central') }}</span>
+								</div>
+								
+								<span class="text-slate-700">|</span>
+								<span class="flex items-center gap-1">🏎️ Categoría: <span class="text-cyan-400 font-bold uppercase">{{ escuderia.categoria|default('F1') }}</span></span>
+							</div>
+						</div>
+					</div>
+
+					<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+						<button onclick="openEditEscuderiaModal()" class="flex items-center justify-center gap-2 bg-slate-950/80 hover:bg-amber-950/40 border border-slate-800 hover:border-amber-500/50 text-slate-300 hover:text-amber-400 font-mono text-[11px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all shadow-md">
+							⚙️ Modificar Patente (200€)
+						</button>
+						<a href="{{ path('app_career_search', { 'partidaId': partidaId }) }}" class="flex items-center justify-center gap-2 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-slate-400 hover:text-white font-mono text-[11px] uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all">
+							⬅️ Volver al Centro
+						</a>
+					</div>
+				</div>
+			</header>
+
+			<nav class="flex border-b border-slate-900 font-mono text-xs overflow-x-auto whitespace-nowrap scrollbar-none">
+				<button id="tab-rendimiento" onclick="switchTab('rendimiento')" class="px-5 py-3 border-b-2 border-amber-500 text-amber-500 bg-slate-900/20 rounded-t-lg font-bold transition-all">📊 INFRAESTRUCTURA Y RENDIMIENTO</button>
+				<button id="tab-pilotos" onclick="switchTab('pilotos')" class="px-5 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all">🛞 ALINEACIÓN DE PILOTOS</button>
+			</nav>
+
+			<main class="space-y-6">
+				<section id="content-rendimiento" class="tab-content grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div class="bg-slate-900/20 border border-slate-900 rounded-xl p-5 font-mono">
+						<span class="text-[10px] text-slate-500 uppercase tracking-widest block mb-3">// DESARROLLO MOTOR</span>
+						<div class="flex justify-between items-end mb-2">
+							<span class="text-2xl font-black text-white">{{ escuderia.rendimientoMotor }}</span>
+							<span class="text-xs text-slate-400">/ 100 PTS</span>
+						</div>
+						<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-900">
+							<div class="bg-red-500 h-full rounded-full" style="width: {{ escuderia.rendimientoMotor }}%"></div>
+						</div>
+					</div>
+
+					<div class="bg-slate-900/20 border border-slate-900 rounded-xl p-5 font-mono">
+						<span class="text-[10px] text-slate-500 uppercase tracking-widest block mb-3">// EFICIENCIA AERODINÁMICA</span>
+						<div class="flex justify-between items-end mb-2">
+							<span class="text-2xl font-black text-white">{{ escuderia.rendimientoAerodinamica }}</span>
+							<span class="text-xs text-slate-400">/ 100 PTS</span>
+						</div>
+						<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-900">
+							<div class="bg-cyan-500 h-full rounded-full" style="width: {{ escuderia.rendimientoAerodinamica }}%"></div>
+						</div>
+					</div>
+
+					<div class="bg-slate-900/20 border border-slate-900 rounded-xl p-5 font-mono">
+						<span class="text-[10px] text-slate-500 uppercase tracking-widest block mb-3">// DINÁMICA DE CHASIS</span>
+						<div class="flex justify-between items-end mb-2">
+							<span class="text-2xl font-black text-white">{{ escuderia.rendimientoChasis }}</span>
+							<span class="text-xs text-slate-400">/ 100 PTS</span>
+						</div>
+						<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-900">
+							<div class="bg-amber-500 h-full rounded-full" style="width: {{ escuderia.rendimientoChasis }}%"></div>
+						</div>
+					</div>
+				</section>
+
+				<section id="content-pilotos" class="tab-content hidden space-y-4">
+					<div class="bg-slate-900/20 border border-slate-900 rounded-2xl p-6">
+						<h3 class="text-sm font-black font-racing uppercase text-slate-400 tracking-wider mb-4">// PILOTOS CON CONTRATO VIGENTE</h3>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							{% for c in contratos %}
+								<div class="p-4 rounded-xl border bg-slate-950/40 border-slate-900 flex items-center justify-between font-mono">
+									<div>
+										<span class="text-[9px] text-amber-400 uppercase font-bold tracking-widest block">Asiento #{{ c.numeroAsiento }}</span>
+										<span class="text-sm font-bold text-white block mt-0.5">
+											{% if c.esJugadorHumano %}
+												{{ pilotoHumano.nombre }} {{ pilotoHumano.apellido }} <span class="text-[10px] text-cyan-400">(Tú)</span>
+											{% else %}
+												{{ c.pilotoIa.nombre }} {{ c.pilotoIa.apellido }}
+											{% endif %}
+										</span>
+									</div>
+									<div class="text-right">
+										<span class="text-[9px] text-slate-500 block uppercase">Sueldo Anual</span>
+										<span class="text-xs text-emerald-400 font-bold">{{ c.sueldoAnual|number_format(0, ',', '.') }} €</span>
+									</div>
+								</div>
+							{% else %}
+								<p class="text-xs text-slate-500 italic font-mono col-span-2 py-4">No hay registros de asientos cubiertos en esta temporada.</p>
+							{% endfor %}
+						</div>
+					</div>
+				</section>
+			</main>
+		</div>
+	</div>
+
+	<div id="edit-escuderia-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+		<div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl relative font-mono text-xs text-slate-300">
+			
+			<div class="flex justify-between items-start border-b border-slate-800 pb-3 mb-4">
+				<div>
+					<span class="text-amber-500 font-racing text-[10px] tracking-widest block uppercase">// MODIFICACIÓN DE REGISTRO FIA</span>
+					<h3 class="text-base font-black font-racing text-white uppercase mt-0.5">Renombrar Escudería</h3>
+				</div>
+				<button onclick="closeEditEscuderiaModal()" class="text-slate-500 hover:text-white transition-colors text-sm">✕</button>
+			</div>
+
+			<div id="modal-error-alert" class="hidden bg-red-950/40 border border-red-900/50 text-red-400 p-2.5 rounded-lg mb-4 text-[11px]"></div>
+
+			<form id="edit-escuderia-form" onsubmit="submitEscuderiaEdit(event)">
+				<div class="space-y-4">
+					<div>
+						<label class="block text-slate-500 text-[10px] uppercase mb-1">Nombre Oficial</label>
+						<input type="text" id="edit-nombreOficial" name="nombreOficial" value="{{ escuderia.nombreOficial }}" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-amber-500 transition-colors">
+					</div>
+
+					<div>
+						<label class="block text-slate-500 text-[10px] uppercase mb-1">Nombre Corto / Siglas</label>
+						<input type="text" id="edit-nombreCorto" name="nombreCorto" value="{{ escuderia.nombreCorto }}" maxlength="10" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white uppercase font-bold tracking-wider focus:outline-none focus:border-amber-500 transition-colors">
+					</div>
+
+					<div class="bg-slate-950/60 border border-slate-900 rounded-xl p-3 flex justify-between items-center mt-2">
+						<span class="text-[10px] text-slate-500 uppercase">Coste de Modificación de Patente</span>
+						<span class="text-sm font-black text-amber-500 font-mono">- 200 €</span>
+					</div>
+
+					<div class="flex gap-2 pt-2">
+						<button type="button" onclick="closeEditEscuderiaModal()" class="w-1/2 border border-slate-800 hover:bg-slate-900 text-slate-400 py-2 rounded-lg transition-colors font-racing uppercase tracking-wider text-[11px]">Cancelar</button>
+						<button type="submit" id="submit-edit-btn" class="w-1/2 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2 rounded-lg transition-colors font-racing font-black uppercase tracking-wider text-[11px]">Confirmar Cambios</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script>
+		function switchTab(tabName) {
+			document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+			document.querySelectorAll('nav button').forEach(btn => {
+				btn.classList.remove('border-amber-500', 'text-amber-500', 'bg-slate-900/20', 'font-bold');
+				btn.classList.add('border-transparent', 'text-slate-400');
+			});
+
+			document.getElementById('content-' + tabName).classList.remove('hidden');
+			const activeBtn = document.getElementById('tab-' + tabName);
+			activeBtn.classList.add('border-amber-500', 'text-amber-500', 'bg-slate-900/20', 'font-bold');
+		}
+
+		function openEditEscuderiaModal() {
+			document.getElementById('edit-escuderia-modal').classList.remove('hidden');
+			document.getElementById('modal-error-alert').classList.add('hidden');
+		}
+
+		function closeEditEscuderiaModal() {
+			document.getElementById('edit-escuderia-modal').classList.add('hidden');
+		}
+
+		function submitEscuderiaEdit(event) {
+			event.preventDefault();
+			const form = document.getElementById('edit-escuderia-form');
+			const submitBtn = document.getElementById('submit-edit-btn');
+			const errorAlert = document.getElementById('modal-error-alert');
+
+			submitBtn.disabled = true;
+			submitBtn.innerText = "PROCESANDO TRANSACCIÓN...";
+			errorAlert.classList.add('hidden');
+
+			const formData = new FormData(form);
+			const url = "{{ path('app_career_escuderia_update', { 'partidaId': partidaId, 'escuderiaId': escuderia.id }) }}";
+
+			fetch(url, {
+				method: 'POST',
+				body: formData,
+				headers: { 'X-Requested-With': 'XMLHttpRequest' }
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					window.location.reload();
+				} else {
+					errorAlert.innerText = data.message;
+					errorAlert.classList.remove('hidden');
+					submitBtn.disabled = false;
+					submitBtn.innerText = "Confirmar Cambios";
+				}
+			})
+			.catch(error => {
+				errorAlert.innerText = "Error crítico de enlace con los servidores de la FIA.";
+				errorAlert.classList.remove('hidden');
+				submitBtn.disabled = false;
+				submitBtn.innerText = "Confirmar Cambios";
+			});
+		}
+	</script>
+{% endblock %}

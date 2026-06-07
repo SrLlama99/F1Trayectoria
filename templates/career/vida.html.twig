@@ -1,6 +1,20 @@
 {% extends 'base.html.twig' %}
 
 {% set partidaId = partida.idPartida %}
+{% set orientacion = pilotoUsuario.preferenciaSexual|default('HETEROSEXUAL') %}
+{% set generoPiloto = pilotoUsuario.genero|default('MASCULINO') %}
+
+{% set etiquetaPareja = 'Pareja' %}
+{% set iconoPareja = '❤️' %}
+
+{% if orientacion == 'HETEROSEXUAL' %}
+    {% set etiquetaPareja = (generoPiloto == 'MASCULINO') ? 'Novia' : 'Novio' %}
+{% elseif orientacion == 'HOMOSEXUAL' %}
+    {% set etiquetaPareja = (generoPiloto == 'MASCULINO') ? 'Novio' : 'Novia' %}
+{% elseif orientacion == 'BISEXUAL' or orientacion == 'PANSEXUAL' %}
+    {# Determinismo basado en el ID de la partida para que sea fijo por ranura de guardado #}
+    {% set etiquetaPareja = 'Pareja' %}
+{% endif %}
 
 {% block title %}FIA CENTRAL - ESTILO DE VIDA
 {% endblock %}
@@ -82,7 +96,11 @@
 							<div class="flex justify-between items-start">
 								<div>
 									<span class="text-[10px] font-racing uppercase tracking-wider px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400">
+										{% if relacion.tipoActor == 'NOVIA' %}
+										{{ etiquetaPareja }}
+										{% else %}
 										{{ relacion.tipoActor|replace({'_': ' '}) }}
+										{% endif %}
 									</span>
 									<h3 class="text-sm font-bold text-white mt-2">
 										{{ esInactivo ? 'Sin Relación Asignada' : relacion.nombreActor }}
@@ -93,6 +111,7 @@
 									{% if relacion.tipoActor == 'NOVIA' %}❤️
 										{% elseif relacion.tipoActor == 'ESCUDERIA' %}🏎️
 										{% elseif relacion.tipoActor == 'TEAM_PRINCIPAL' %}👔
+										{% elseif relacion.tipoActor == 'PRENSA' %}🗞️
 										{% elseif relacion.tipoActor == 'COMPANERO' %}👥
 										{% elseif 'PATROCINADOR' in relacion.tipoActor %}🤝
 										{% else %}👤

@@ -28,23 +28,34 @@ class ResultadosCarreras
     #[ORM\JoinColumn(name: 'escuderia_id', referencedColumnName: 'id', nullable: false)]
     private ?Escuderia $escuderia = null;
 
-    #[ORM\Column(type: 'integer')]
-    private ?int $posicionSalida = null;
+    // ==========================================
+    // 📊 NUEVOS CAMPOS DEL REWORK DE SESIONES
+    // ==========================================
 
-    #[ORM\Column(type: 'string', length: 15, nullable: true)]
-    private ?string $tiempoClasificacion = null;
+    #[ORM\Column(type: 'integer')]
+    private ?int $numeroSesion = null; // Siempre del 1 al 5
+
+    #[ORM\Column(type: 'string', length: 30)]
+    private ?string $tipoSesion = null; // 'LIBRES', 'CLASIFICACION', 'CLASIFICACION_SPRINT', 'CARRERA_SPRINT', 'CARRERA'
 
     #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $posicionFinal = null;
+    private ?int $posicionSalida = null; // Útil para parrilas de salida en Carreras y Sprints
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $posicionFinal = null; // Resultado final en esa sesión concreta (P1, P2...)
+
+    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    private ?string $mejorTiempoVuelta = null; // Ej: "1:11.543" o "DNF"
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
-    private int $puntosObtenidos = 0;
+    private int $puntosObtenidos = 0; // Puntos repartidos en esa sesión (0 en libres, parciales en Sprint, completos en Carrera)
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
-    private bool $vueltaRapida = false;
+    private bool $vueltaRapida = false; // Flag para bonificaciones de vuelta rápida en carreras
 
-    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'TERMINO'])]
-    private string $estadoCarrera = 'TERMINO'; // 'TERMINO', 'ACCIDENTE', 'AVERIA_MECANICA'
+    // ==========================================
+    // GETTERS Y SETTERS
+    // ==========================================
 
     public function getId(): ?int { return $this->id; }
 
@@ -52,7 +63,7 @@ class ResultadosCarreras
     public function setEvento(?CalendarioTemporada $evento): self { $this->evento = $evento; return $this; }
 
     public function isEsJugadorHumano(): bool { return $this->esJugadorHumano; }
-    public function setEsJugadorHumano(bool $esHumano): self { $this->esJugadorHumano = $esHumano; return $this; }
+    public function setEsJugadorHumano(bool $esJugadorHumano): self { $this->esJugadorHumano = $esJugadorHumano; return $this; }
 
     public function getPilotoIa(): ?PilotoIa { return $this->pilotoIa; }
     public function setPilotoIa(?PilotoIa $pilotoIa): self { $this->pilotoIa = $pilotoIa; return $this; }
@@ -60,21 +71,24 @@ class ResultadosCarreras
     public function getEscuderia(): ?Escuderia { return $this->escuderia; }
     public function setEscuderia(?Escuderia $escuderia): self { $this->escuderia = $escuderia; return $this; }
 
-    public function getPosicionSalida(): ?int { return $this->posicionSalida; }
-    public function setPosicionSalida(int $posicion): self { $this->posicionSalida = $posicion; return $this; }
+    public function getNumeroSesion(): ?int { return $this->numeroSesion; }
+    public function setNumeroSesion(int $numero): self { $this->numeroSesion = $numero; return $this; }
 
-    public function getTiempoClasificacion(): ?string { return $this->tiempoClasificacion; }
-    public function setTiempoClasificacion(?string $tiempo): self { $this->tiempoClasificacion = $tiempo; return $this; }
+    public function getTipoSesion(): ?string { return $this->tipoSesion; }
+    public function setTipoSesion(string $tipo): self { $this->tipoSesion = strtoupper($tipo); return $this; }
+
+    public function getPosicionSalida(): ?int { return $this->posicionSalida; }
+    public function setPosicionSalida(?int $posicion): self { $this->posicionSalida = $posicion; return $this; }
 
     public function getPosicionFinal(): ?int { return $this->posicionFinal; }
     public function setPosicionFinal(?int $posicion): self { $this->posicionFinal = $posicion; return $this; }
+
+    public function getMejorTiempoVuelta(): ?string { return $this->mejorTiempoVuelta; }
+    public function setMejorTiempoVuelta(?string $tiempo): self { $this->mejorTiempoVuelta = $tiempo; return $this; }
 
     public function getPuntosObtenidos(): int { return $this->puntosObtenidos; }
     public function setPuntosObtenidos(int $puntos): self { $this->puntosObtenidos = $puntos; return $this; }
 
     public function isVueltaRapida(): bool { return $this->vueltaRapida; }
     public function setVueltaRapida(bool $vueltaRapida): self { $this->vueltaRapida = $vueltaRapida; return $this; }
-
-    public function getEstadoCarrera(): string { return $this->estadoCarrera; }
-    public function setEstadoCarrera(string $estado): self { $this->estadoCarrera = $estado; return $this; }
 }
