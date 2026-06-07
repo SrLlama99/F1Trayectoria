@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+{% set partidaId = partida.idPartida %}
+{% block title %}FIA PADDOCK - BOUTIQUE DE LUJO{% endblock %}
+
+{% block body %}
+<div class="relative min-h-screen flex flex-col bg-slate-950 text-white p-6">
+    <div class="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,24,38,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.2)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+    <div class="relative z-10 w-full max-w-6xl mx-auto flex flex-col flex-grow">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-5 mb-6 gap-4">
+            <div>
+                <span class="text-emerald-400 font-bold tracking-widest text-xs uppercase px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">Finanzas Personales</span>
+                <h1 class="text-3xl font-extrabold tracking-tight mt-1 text-slate-100 uppercase">TIENDA EXCLUSIVA DE ESTILO DE VIDA</h1>
+                <p class="text-xs text-slate-400 mt-0.5">Invierte tu salario de escudería para mejorar tu prestigio social fuera de los circuitos.</p>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-lg flex items-center gap-6 shadow-xl font-mono">
+                <div>
+                    <span class="text-[10px] text-slate-500 block uppercase font-sans font-bold">Saldo Disponible</span>
+                    <span id="headerDinero" class="text-xl font-black text-emerald-400">€ {{ piloto.dinero|number_format(0, ',', '.') }}</span>
+                </div>
+                <div class="border-l border-slate-800 pl-6">
+                    <span class="text-[10px] text-slate-500 block uppercase font-sans font-bold">Nivel de Vida Actual</span>
+                    <span id="headerEstilo" class="text-lg font-black text-indigo-400">{{ piloto.estiloDeVida }} / 100</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex space-x-2 mb-6 border-b border-slate-900 pb-3">
+            <button onclick="switchTab('OBJETOS')" id="tabBtn-OBJETOS" class="tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-cyan-500 text-slate-950 border-cyan-400">
+                📦 Objetos Básicos
+            </button>
+            <button onclick="switchTab('VEHICULOS')" id="tabBtn-VEHICULOS" class="tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-slate-900 text-slate-400 border-slate-800 hover:text-white">
+                🏎️ Vehículos / Motor
+            </button>
+            <button onclick="switchTab('PROPIEDADES')" id="tabBtn-PROPIEDADES" class="tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-slate-900 text-slate-400 border-slate-800 hover:text-white">
+                🏢 Propiedades Residenciales
+            </button>
+        </div>
+
+        {% for categoria, itemsList in tienda %}
+            <div id="tabContent-{{ categoria }}" class="tab-content grid grid-cols-1 md:grid-cols-3 gap-6 {% if categoria != 'OBJETOS' %}hidden{% endif %}">
+                {% for itemData in itemsList %}
+                    {% set item = itemData.entity %}
+                    <div class="bg-slate-900/80 border {% if itemData.comprado %}border-emerald-500/20 opacity-75{% else %}border-slate-800 hover:border-cyan-500/30{% endif %} rounded-xl p-5 flex flex-col justify-between shadow-lg backdrop-blur-sm relative transition-all">
+                        
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-3xl p-2 bg-slate-950 rounded-lg border border-slate-800/60">{{ item.emoji }}</span>
+                                <span class="text-[10px] font-black tracking-wide text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded">
+                                    +{{ item.bonoEstiloDeVida }} ESTILO DE VIDA
+                                </span>
+                            </div>
+
+                            <h3 class="text-lg font-bold text-slate-100 uppercase tracking-wide mt-1">{{ item.nombre }}</h3>
+                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">{{ item.descripcion }}</p>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-950 flex items-center justify-between gap-3">
+                            <div>
+                                <span class="text-[9px] text-slate-500 block uppercase font-bold">Valor de Mercado</span>
+                                <span class="text-base font-mono font-black text-slate-200">{{ item.precio|number_format(0, ',', '.') }}€</span>
+                            </div>
+
+                            {% if itemData.comprado %}
+                                <button disabled class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold px-4 py-2 rounded text-xs uppercase tracking-wider cursor-not-allowed">
+                                    ✓ Adquirido
+                                </button>
+                            {% else %}
+                                <button id="btnBuy-{{ item.id }}" onclick="ejecutarCompra({{ item.id }}, {{ item.precio }})" class="bg-slate-800 hover:bg-cyan-500 text-slate-200 hover:text-slate-950 font-bold px-4 py-2 rounded border border-slate-700 hover:border-cyan-400 text-xs uppercase tracking-wider transition-all shadow-md">
+                                    Comprar
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-span-3 text-center py-12 border border-dashed border-slate-900 rounded-xl text-slate-500 font-racing text-sm">
+                        No hay artículos de lujo listados en esta sección regulatoria.
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+// Sistema interactivo de Pestañas
+function switchTab(catKey) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = "tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-slate-900 text-slate-400 border-slate-800 hover:text-white";
+    });
+
+    document.getElementById('tabContent-' + catKey).classList.remove('hidden');
+    
+    const activeBtn = document.getElementById('tabBtn-' + catKey);
+    activeBtn.className = "tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-cyan-500 text-slate-950 border-cyan-400";
+}
+
+// Envío y cobro asíncrono
+function ejecutarCompra(itemId, precio) {
+    if (!confirm("¿Autorizas la transferencia bancaria para adquirir este artículo de lujo?")) return;
+
+    const btn = document.getElementById('btnBuy-' + itemId);
+    btn.disabled = true;
+    btn.innerText = "PROCESANDO PAGO...";
+
+    let formData = new FormData();
+    formData.append('partidaId', '{{ partida.idPartida }}');
+    formData.append('itemId', itemId);
+
+    fetch('/api/career/shop/buy', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            // Actualizar contadores del header al vuelo
+            document.getElementById('headerDinero').innerText = data.nuevoDinero;
+            document.getElementById('headerEstilo').innerText = data.nuevoEstilo + " / 100";
+
+            // Cambiar visualmente el botón a Adquirido
+            btn.className = "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold px-4 py-2 rounded text-xs uppercase tracking-wider cursor-not-allowed";
+            btn.innerText = "✓ Adquirido";
+            btn.onclick = null;
+        } else {
+            alert("SISTEMA BANCARIO RECHAZADO: " + data.message);
+            btn.disabled = false;
+            btn.innerText = "Comprar";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Caída en el terminal de pagos asíncronos.");
+        btn.disabled = false;
+        btn.innerText = "Comprar";
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+<div class="fixed top-4 left-4 z-50">
+    <button onclick="toggleSidebar()" class="bg-slate-900/90 hover:bg-cyan-500 border border-slate-800 hover:border-cyan-400 text-cyan-400 hover:text-slate-950 p-2.5 rounded-lg flex items-center justify-center shadow-lg transition-all backdrop-blur-md group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+</div>
+
+<div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300"></div>
+
+<aside id="sidebarMenu" class="fixed top-0 left-0 bottom-0 w-72 bg-slate-950/95 border-r border-slate-900 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col justify-between backdrop-blur-md shadow-[5px_0_30px_rgba(0,0,0,0.7)]">
+    
+    <div>
+        <div class="p-5 border-b border-slate-900 flex justify-between items-center bg-slate-900/20">
+            <div class="flex flex-col">
+                <span class="text-[9px] font-racing text-red-500 tracking-[0.2em] uppercase">FIA Paddock Unit</span>
+                <span class="font-racing text-lg font-black tracking-wider text-white italic">MENU // <span class="text-cyan-400">SISTEMA</span></span>
+            </div>
+            <button onclick="toggleSidebar()" class="text-slate-500 hover:text-white p-1 rounded transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <nav class="p-4 space-y-1.5 flex-grow">
+            <a href="/career/main/{{ partidaId|default(0) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-lg font-racing text-xs font-bold tracking-wider uppercase border transition-all text-slate-300 border-transparent hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/20 group">
+                <span class="text-base group-hover:animate-pulse">🏠</span>
+                <span>Inicio</span>
+            </a>
+
+            <a href="/career/stats/{{ partidaId|default(0) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-lg font-racing text-xs font-bold tracking-wider uppercase border transition-all text-slate-300 border-transparent hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/20 group">
+                <span class="text-base">🧬</span>
+                <span>Habilidades</span>
+            </a>
+
+            <a href="/career/vida/{{ partidaId|default(0) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-lg font-racing text-xs font-bold tracking-wider uppercase border transition-all text-slate-300 border-transparent hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/20 group">
+                <span class="text-base">🏎️</span>
+                <span>Vida</span>
+            </a>
+
+            <a href="/career/search/{{ partidaId|default(0) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-lg font-racing text-xs font-bold tracking-wider uppercase border transition-all text-slate-300 border-transparent hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/20 group">
+                <span class="text-base group-hover:scale-110 transition-transform">🔍</span>
+                <span>Búsqueda</span>
+            </a>
+
+            <a href="/career/standings/{{ partidaId|default(0) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-lg font-racing text-xs font-bold tracking-wider uppercase border transition-all text-slate-300 border-transparent hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/20 group">
+                <span class="text-base">🏆</span>
+                <span>Clasificaciones</span>
+            </a>
+
+            <a href="/career/results-history/{{ partidaId|default(0) }}" class="flex items-center gap-3.5 px-4 py-3 rounded-lg font-racing text-xs font-bold tracking-wider uppercase border transition-all text-slate-300 border-transparent hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/20 group">
+                <span class="text-base">🏁</span>
+                <span>Resultados Previos</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-900 bg-slate-900/10 flex flex-col space-y-2">
+        <a href="{{ path('app_dashboard') }}" class="w-full text-center font-racing text-[10px] font-bold tracking-widest uppercase bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800 py-2 rounded transition-all">
+            💾 Guardar y Salir al Panel
+        </a>
+    </div>
+</aside>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebarMenu');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.add('opacity-100'), 10);
+    } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.remove('opacity-100');
+        setTimeout(() => overlay.classList.add('hidden'), 300);
+    }
+}
+</script>

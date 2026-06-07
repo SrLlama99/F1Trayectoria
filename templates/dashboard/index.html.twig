@@ -1,0 +1,283 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}F1 TRAYECTORIA - ARCHIVOS DE MEMORIA{% endblock %}
+
+{% block body %}
+	<!-- CONTAINER PRINCIPAL DE LA SELECCIÓN DE SLOT (Se le añade ID para poder ocultarlo) -->
+	<div id="selectorContent" class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden p-6 transition-all duration-500 opacity-100 scale-100">
+
+		<div class="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,24,38,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.4)_1px,transparent_1px)] bg-[size:30px_30px]"></div>
+		<div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[160px] z-0"></div>
+
+		<div class="relative z-10 text-center mb-10 no-select">
+			<h2 class="font-racing text-sm tracking-[0.3em] text-cyan-400 uppercase">Unidad de Almacenamiento Central</h2>
+			<h1 class="font-racing text-4xl font-black text-white tracking-wider uppercase mt-1 italic">
+				Selección de <span class="text-red-600">Trayectoria</span>
+			</h1>
+			<div class="w-32 h-1 bg-red-600 mx-auto mt-4 rounded-full shadow-[0_0_10px_rgba(220,38,38,0.5)]"></div>
+		</div>
+
+		<div class="relative z-10 w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 px-4">
+
+			{% for slotNumero, datos in slots %}
+
+				{% if datos is null %}
+					<div class="relative group bg-slate-950/40 border-2 border-dashed border-slate-800 hover:border-cyan-500/50 p-8 rounded-xl flex flex-col items-center justify-center min-h-[340px] transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+
+						<div class="absolute top-3 left-4 font-racing text-xs text-slate-600">SLOT // 0{{ slotNumero }}</div>
+
+						<div class="w-16 h-16 rounded-full border border-slate-800 group-hover:border-cyan-400 flex items-center justify-center mb-4 bg-slate-900/50 transition-colors">
+							<span class="text-2xl text-slate-600 group-hover:text-cyan-400 font-racing transition-colors">+</span>
+						</div>
+
+						<h3 class="font-racing text-lg font-bold text-slate-400 group-hover:text-white uppercase tracking-wide text-center transition-colors">
+							Sin Datos de Telemetría
+						</h3>
+
+						<p class="text-xs text-slate-600 text-center mt-2 max-w-[200px]">
+							Inicia un nuevo contrato desde las categorías inferiores.
+						</p>
+
+						<a href="/career/create/slot/{{ slotNumero }}" class="mt-6 font-racing text-xs font-bold tracking-widest uppercase bg-slate-900 border border-slate-700 hover:bg-cyan-500 hover:text-slate-950 text-cyan-400 px-4 py-2.5 rounded transition-all shadow-md group-hover:scale-105">
+							Crear Piloto
+						</a>
+					</div>
+				{% else %}
+					<div class="relative bg-slate-950/90 border border-slate-800 border-t-4 border-t-cyan-400 p-6 rounded-b-xl flex flex-col justify-between min-h-[340px] transition-all duration-300 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:border-cyan-400">
+
+						<div class="absolute top-2 left-4 font-racing text-xs text-cyan-400/60">SLOT // 0{{ slotNumero }}</div>
+						<span class="absolute top-2 right-4 w-1.5 h-1.5 bg-cyan-400 animate-pulse rounded-full"></span>
+
+						<div class="mt-4">
+							<div class="flex justify-between items-baseline">
+								<span class="text-[10px] font-racing text-slate-500 uppercase tracking-widest">Piloto Principal</span>
+								<span class="font-racing text-lg font-black text-cyan-400">
+									#{{ datos.piloto.numeroDorsal|default('00') }}
+								</span>
+							</div>
+
+							<div class="flex items-start gap-3 mt-1">
+								{% if datos.piloto.pais and datos.piloto.pais.banderaUrl %}
+									<div class="flex-shrink-0 mt-2">
+										<img src="{{ datos.piloto.pais.banderaUrl }}" alt="{{ datos.piloto.pais.nombrePais }}" class="h-3.5 w-5 object-cover rounded-sm border border-slate-800 shadow-[0_0_8px_rgba(0,0,0,0.5)]" title="{{ datos.piloto.pais.nombrePais }}">
+									</div>
+								{% else %}
+									<span class="text-base mt-1" title="Sin Nacionalidad">🏳️</span>
+								{% endif %}
+
+								<div class="flex flex-col min-w-0">
+									<h3 class="font-racing text-2xl font-black text-white tracking-wide uppercase italic leading-tight break-words">
+										{{ datos.piloto.nombre }}
+										<span class="text-cyan-400">{{ datos.piloto.apellido }}</span>
+										<span class="inline-block text-[10px] font-mono font-bold bg-slate-900 border border-slate-800 text-slate-400 px-1.5 py-0.5 rounded not-italic align-middle ml-1 transform -translate-y-0.5">
+											{{ datos.piloto.abreviatura|default('???') }}
+										</span>
+									</h3>
+								</div>
+							</div>
+
+							<div class="mt-3 flex items-center justify-between text-xs font-racing text-slate-400">
+								<span>RANGO DE PILOTO</span>
+								<span class="text-cyan-400 font-bold">LVL {{ datos.piloto.nivelActual }}</span>
+							</div>
+							<div class="w-full bg-slate-900 h-1 mt-1 rounded-full overflow-hidden">
+								<div class="bg-cyan-400 h-full" style="width: {{ datos.piloto.expActual % 100 }}%"></div>
+							</div>
+						</div>
+
+						<div class="bg-slate-900/60 border border-slate-800/80 p-3 rounded my-4 space-y-1.5">
+							<div class="flex justify-between text-xs border-b border-slate-800/50 pb-1.5">
+								<span class="text-slate-500 font-racing">Escudería:</span>
+								<span class="font-racing font-bold tracking-wide {% if datos.escuderia == 'Agente Libre' %}text-amber-500/90{% else %}text-emerald-400{% endif %}">
+									{{ datos.escuderia }}
+								</span>
+							</div>
+							<div class="flex justify-between text-xs">
+								<span class="text-slate-500 font-racing">Estado:</span>
+								<span class="text-red-500 font-racing font-bold tracking-wider uppercase">{{ datos.partida.ingameEstado }}</span>
+							</div>
+							<div class="flex justify-between text-xs">
+								<span class="text-slate-500">Cronología:</span>
+								<span class="text-white font-medium text-[11px]">
+									{{ datos.partida.ingameDia }}/{{ datos.partida.ingameMes }}/{{ datos.partida.ingameAno }}</span>
+							</div>
+						</div>
+
+						<div class="border-t border-slate-900 pt-4 flex flex-col space-y-3">
+							<div class="text-[11px] text-slate-500 flex justify-between items-center">
+								<span>Última Sincronización:</span>
+								<span class="text-slate-300 font-medium">{{ datos.partida.fechaGuardado|date('d/m/Y H:i') }}</span>
+							</div>
+
+							<!-- 🟢 MODIFICADO: Ahora ejecuta la función de carga controlada mediante Javascript -->
+							<button type="button" onclick="iniciarCargaTelemetria('/career/main/{{ datos.partida.idPartida }}', '{{ datos.piloto.nombre }} {{ datos.piloto.apellido }}')" class="w-full text-center font-racing text-xs font-black tracking-widest uppercase bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 rounded transition-colors duration-200 shadow-[0_4px_15px_rgba(6,182,212,0.2)] cursor-pointer">
+								Cargar Telemetría
+							</button>
+
+							<button type="button" onclick="openDeleteModal('{{ path('app_career_delete', {'idPartida': datos.partida.idPartida}) }}', '{{ datos.piloto.nombre }} {{ datos.piloto.apellido }}')" class="w-full text-center font-racing text-xs font-bold tracking-widest uppercase bg-slate-900 border border-red-600/30 hover:border-red-600 hover:bg-red-600/10 text-red-500 py-2 rounded transition-all duration-200">
+								🗑️ Purgar Datos
+							</button>
+						</div>
+					</div>
+				{% endif %}
+
+			{% endfor %}
+
+		</div>
+
+		<div class="relative z-10 mt-12">
+			<a href="{{ path('app_logout') }}" class="text-xs font-racing uppercase tracking-widest text-slate-500 hover:text-red-500 transition-colors">
+				← Desconectar Sistema
+			</a>
+		</div>
+
+	</div>
+
+	<!-- 🟢 NUEVO: COMPONENTE GLOBAL PANTALLA DE CARGA (Oculto por defecto) -->
+	<div id="loadingScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 hidden opacity-0 transition-opacity duration-500">
+		<div class="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+		
+		<div class="relative text-center space-y-6 max-w-md px-6">
+			<!-- Spinner de Telemetría Estilo Radar -->
+			<div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+				<div class="absolute inset-0 rounded-full border-4 border-slate-900"></div>
+				<div class="absolute inset-0 rounded-full border-4 border-transparent border-t-cyan-400 animate-spin"></div>
+				<div class="absolute w-14 h-14 rounded-full border border-dashed border-cyan-500/30 animate-pulse flex items-center justify-center">
+					<span class="text-xs font-mono text-cyan-400 font-bold" id="loadPercent">00%</span>
+				</div>
+			</div>
+
+			<!-- Mensajes de Carga Dinámicos -->
+			<div class="space-y-1.5">
+				<h3 class="font-racing text-xs text-red-500 uppercase tracking-[0.25em]" id="loadStatus">Estableciendo Enlace Estructural...</h3>
+				<h2 class="font-racing text-xl font-black text-white uppercase italic tracking-wider">
+					Sincronizando Piloto: <br>
+					<span id="loadPilotName" class="text-cyan-400">------</span>
+				</h2>
+			</div>
+
+			<!-- Terminal de Registros Simulados de Boxes -->
+			<div class="bg-slate-950 border border-slate-900 p-3 rounded-lg text-left font-mono text-[10px] text-slate-500 h-20 overflow-hidden space-y-1 shadow-inner">
+				<div class="text-cyan-500/70 animate-pulse">> Conectando con servidor de base de datos... SUCCESS</div>
+				<div id="logLine2" class="hidden">> Descargando registros de rendimiento de motor...</div>
+				<div id="logLine3" class="hidden">> Mapeando posiciones del Campeonato Mundial...</div>
+				<div id="logLine4" class="hidden">> Desplegando Central de Paddock... OK</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- MODAL DE CONFIRMACIÓN DE BORRADO -->
+	<div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 backdrop-blur-md bg-slate-950/70 opacity-0 transition-opacity duration-300">
+		<div class="relative w-full max-w-md bg-slate-950 border border-red-600/40 rounded-xl shadow-[0_0_50px_rgba(220,38,38,0.15)] overflow-hidden transform scale-95 transition-transform duration-300">
+			<div class="h-1.5 w-full bg-gradient-to-r from-red-600 via-orange-500 to-red-600 animate-pulse"></div>
+			<div class="p-6 text-center">
+				<div class="w-16 h-16 bg-red-600/10 border border-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+					<span class="text-red-500 text-2xl font-black font-racing">⚠️</span>
+				</div>
+				<h3 class="font-racing text-lg font-black text-white tracking-wide uppercase italic">Alerta Crítica del Sistema</h3>
+				<p class="text-slate-400 text-xs mt-3">
+					¿Estás completamente seguro de que deseas purgar los archivos de memoria del piloto <span id="modalPilotName" class="text-cyan-400 font-bold font-racing"></span>?
+				</p>
+			</div>
+			<div class="grid grid-cols-2 gap-px bg-slate-900 border-t border-slate-900">
+				<button type="button" onclick="closeDeleteModal()" class="bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-white text-xs font-racing font-bold uppercase tracking-widest py-3.5 transition-colors">Abortar</button>
+				<a id="modalDeleteLink" href="#" class="bg-slate-950 hover:bg-red-950/40 text-red-500 hover:text-red-400 text-xs font-racing font-black uppercase tracking-widest py-3.5 transition-colors block text-center border-l border-slate-900">Confirmar Purga</a>
+			</div>
+		</div>
+	</div>
+
+	<!-- SCRIPTS DE CONTROL -->
+	<script>
+		// --- LÓGICA DE CARGA DE TELEMETRÍA (NUEVA) ---
+		function iniciarCargaTelemetria(urlDestino, nombrePiloto) {
+			const selector = document.getElementById('selectorContent');
+			const loader = document.getElementById('loadingScreen');
+			
+			document.getElementById('loadPilotName').textContent = nombrePiloto;
+
+			// Fase 1: Desvanecer el menú de slots
+			selector.classList.remove('opacity-100', 'scale-100');
+			selector.classList.add('opacity-0', 'scale-95');
+
+			setTimeout(() => {
+				selector.classList.add('hidden');
+				
+				// Fase 2: Mostrar pantalla de carga cibernética
+				loader.classList.remove('hidden');
+				setTimeout(() => {
+					loader.classList.remove('opacity-0');
+					loader.classList.add('opacity-100');
+					ejecutarSimulacionCarga(urlDestino);
+				}, 5);
+			}, 400);
+		}
+
+		function ejecutarSimulacionCarga(urlDestino) {
+			const percentText = document.getElementById('loadPercent');
+			const statusText = document.getElementById('loadStatus');
+			
+			let porcentaje = 0;
+			
+			const intervalo = setInterval(() => {
+				porcentaje += Math.floor(Math.random() * 8) + 4; // Incrementos variables orgánicos
+				
+				if (porcentaje >= 100) {
+					porcentaje = 100;
+					clearInterval(intervalo);
+					statusText.textContent = "¡SINCRONIZACIÓN COMPLETA!";
+					statusText.classList.remove('text-red-500');
+					statusText.classList.add('text-emerald-400');
+					
+					// Redirección definitiva al Menú Principal (app_career_main)
+					setTimeout(() => {
+						window.location.href = urlDestino;
+					}, 350);
+				}
+
+				percentText.textContent = (porcentaje < 10 ? '0' : '') + porcentaje + '%';
+
+				// Eventos visuales según porcentaje
+				if (porcentaje > 25 && porcentaje < 60) {
+					statusText.textContent = "DESCARGANDO TELEMETRÍA HISTÓRICA...";
+					document.getElementById('logLine2').classList.remove('hidden');
+				} else if (porcentaje >= 60 && porcentaje < 85) {
+					statusText.textContent = "CALCULANDO GRID DE CLASIFICACIÓN...";
+					document.getElementById('logLine3').classList.remove('hidden');
+				} else if (porcentaje >= 85 && porcentaje < 100) {
+					statusText.textContent = "INICIALIZANDO CENTRAL DEL PADDOCK...";
+					document.getElementById('logLine4').classList.remove('hidden');
+				}
+			}, 80);
+		}
+
+		// --- CONTROL DEL MODAL DE ELIMINACIÓN ---
+		const modal = document.getElementById('deleteModal');
+		const modalContent = modal.querySelector('.transform');
+		const pilotNameSpan = document.getElementById('modalPilotName');
+		const deleteLink = document.getElementById('modalDeleteLink');
+
+		function openDeleteModal(deleteUrl, pilotName) {
+			pilotNameSpan.textContent = pilotName;
+			deleteLink.href = deleteUrl;
+			modal.classList.remove('hidden');
+			setTimeout(() => {
+				modal.classList.remove('opacity-0');
+				modal.classList.add('opacity-100');
+				modalContent.classList.remove('scale-95');
+				modalContent.classList.add('scale-100');
+			}, 10);
+		}
+
+		function closeDeleteModal() {
+			modal.classList.remove('opacity-100');
+			modal.classList.add('opacity-0');
+			modalContent.classList.remove('scale-100');
+			modalContent.classList.add('scale-95');
+			setTimeout(() => { modal.classList.add('hidden'); }, 300);
+		}
+
+		modal.addEventListener('click', function (e) {
+			if (e.target === modal) closeDeleteModal();
+		});
+	</script>
+{% endblock %}

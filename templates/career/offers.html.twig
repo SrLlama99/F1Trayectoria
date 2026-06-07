@@ -1,0 +1,189 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}FIA - OFERTAS DE EQUIPOS{% endblock %}
+
+{% block body %}
+<div class="relative min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white p-6">
+    <div class="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,24,38,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.2)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+    
+    <div class="relative z-10 w-full max-w-5xl">
+        <header class="text-center mb-10">
+            <span class="text-red-500 font-bold tracking-widest text-xs uppercase px-3 py-1 bg-red-500/10 rounded-full border border-red-500/20">Mercado de Fichajes</span>
+            <h1 class="text-3xl font-extrabold tracking-tight mt-2 text-slate-100">OFERTAS DE CONTRATO DISPONIBLES</h1>
+            <p class="text-sm text-slate-400 mt-1">3 escuderías de la división Karting han mostrado interés en tus marcas de simulación.</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for oferta in ofertas %}
+            <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 flex flex-col justify-between shadow-xl backdrop-blur-sm transition-all hover:border-red-500/40">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-2xl font-black text-slate-700">{{ oferta.corto }}</span>
+                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">OFERTA ACTIVA</span>
+                    </div>
+
+                    <h2 class="text-xl font-bold text-slate-100 mb-4 line-clamp-1">{{ oferta.nombre }}</h2>
+
+                    <div class="space-y-2 mb-6 bg-slate-950/60 p-3 rounded-lg border border-slate-900 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Eficiencia Motor:</span>
+                            <span class="font-mono text-slate-200 font-bold">{{ oferta.motor }} pts</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Rendimiento Chasis:</span>
+                            <span class="font-mono text-slate-200 font-bold">{{ oferta.chasis }} pts</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Aerodinámica:</span>
+                            <span class="font-mono text-slate-200 font-bold">{{ oferta.aero }} pts</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-800 pt-4 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">Duración:</span>
+                            <span class="text-sm font-semibold text-slate-200">{{ oferta.duracion }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">Sueldo / Carrera:</span>
+                            <span class="text-lg font-mono font-bold text-yellow-400">{{ oferta.sueldo_carrera | number_format(0, ',', '.') }} €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="abrirModalPrecontrato({{ oferta.id }}, '{{ oferta.nombre }}', {{ oferta.sueldo_carrera }})" class="w-full mt-6 bg-slate-800 hover:bg-red-600 text-slate-100 hover:text-white font-bold py-2.5 px-4 rounded-lg transition-colors border border-slate-700 hover:border-red-500 text-sm tracking-wide shadow-md">
+                    REVISAR CONTRATO
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="modalContrato" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+    
+    <div class="relative bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl z-10 transform scale-95 transition-transform duration-200">
+        <div class="text-center mb-6">
+            <div class="w-12 h-12 bg-red-500/10 border border-red-500/30 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-100 uppercase tracking-wide">Firma de Superlicencia FIA</h3>
+            <p class="text-xs text-slate-400 mt-1">Estás a punto de firmar un compromiso legal deportivo.</p>
+        </div>
+
+        <div class="bg-slate-950/60 border border-slate-950 rounded-lg p-4 mb-6 text-sm space-y-3">
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-400">Escudería Destino:</span>
+                <span id="modalNombreEquipo" class="font-bold text-slate-200">---</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-900 pb-2">
+                <span class="text-slate-400">Vigencia del Acuerdo:</span>
+                <span class="text-slate-200 font-semibold">1 Temporada (2026)</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400">Sueldo Estipulado:</span>
+                <div>
+                    <span id="modalSueldo" class="font-mono font-bold text-yellow-400 text-base">0 €</span>
+                    <span class="text-[10px] text-slate-500 font-bold block text-right">por carrera</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalStatus" class="hidden text-center text-xs p-2.5 rounded-lg mb-4 font-semibold"></div>
+
+        <div class="flex space-x-3" id="modalActions">
+            <button onclick="cerrarModalContrato()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-lg border border-slate-700 transition-colors text-sm">
+                RECHAZAR
+            </button>
+            <button id="btnFirmar" onclick="ejecutarFirmaAsincrona()" class="w-1/2 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg border border-red-500 transition-colors shadow-md text-sm tracking-wide">
+                FIRMAR ACUERDO
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales de control para el modal
+let targetEscuderiaId = null;
+let targetSueldoCarrera = 0;
+
+function abrirModalPrecontrato(escuderiaId, nombreEquipo, sueldoCarrera) {
+    targetEscuderiaId = escuderiaId;
+    targetSueldoCarrera = sueldoCarrera;
+
+    // Inyectar datos en las etiquetas del modal
+    document.getElementById('modalNombreEquipo').innerText = nombreEquipo;
+    document.getElementById('modalSueldo').innerText = new Intl.NumberFormat('es-ES').format(sueldoCarrera) + ' €';
+
+    // Ocultar alertas previas y restaurar botones
+    const statusBox = document.getElementById('modalStatus');
+    statusBox.classList.add('hidden');
+    document.getElementById('modalActions').classList.remove('hidden');
+
+    // Mostrar el modal quitando la clase hidden
+    const modal = document.getElementById('modalContrato');
+    modal.classList.remove('hidden');
+}
+
+function cerrarModalContrato() {
+    document.getElementById('modalContrato').classList.add('hidden');
+    targetEscuderiaId = null;
+    targetSueldoCarrera = 0;
+}
+
+function ejecutarFirmaAsincrona() {
+    const btnFirmar = document.getElementById('btnFirmar');
+    const statusBox = document.getElementById('modalStatus');
+    
+    // Deshabilitar botón para evitar multi-click
+    btnFirmar.disabled = true;
+    btnFirmar.innerText = "PROCESANDO FIRMA...";
+
+    let formData = new FormData();
+    formData.append('partidaId', '{{ partidaId }}');
+    formData.append('escuderiaId', targetEscuderiaId);
+    formData.append('sueldoCarrera', targetSueldoCarrera);
+
+    fetch('/api/career/sign-contract', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        statusBox.classList.remove('hidden');
+        
+        if (data.success) {
+            // Estilo de Éxito
+            statusBox.className = "text-center text-xs p-2.5 rounded-lg mb-4 font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+            statusBox.innerText = "✓ " + data.message + " Redireccionando al paddock...";
+            
+            // Ocultamos los botones de acción ya que el contrato está firmado
+            document.getElementById('modalActions').classList.add('hidden');
+
+            // Busca esta línea dentro del fetch en templates/career/offers.html.twig:
+            setTimeout(() => {
+            // Redirige a la pantalla para elegir dorsal pasando el ID de la partida
+                window.location.href = "/career/choose-number/" + '{{ partidaId }}';
+            }, 2000);
+        } else {
+            // Estilo de Error
+            statusBox.className = "text-center text-xs p-2.5 rounded-lg mb-4 font-semibold bg-red-500/10 text-red-400 border border-red-500/20";
+            statusBox.innerText = "✖ ERROR: " + data.message;
+            btnFirmar.disabled = false;
+            btnFirmar.innerText = "FIRMAR ACUERDO";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        statusBox.classList.remove('hidden');
+        statusBox.className = "text-center text-xs p-2.5 rounded-lg mb-4 font-semibold bg-red-500/10 text-red-400 border border-red-500/20";
+        statusBox.innerText = "✖ Error de red: No se pudo validar la superlicencia.";
+        btnFirmar.disabled = false;
+        btnFirmar.innerText = "FIRMAR ACUERDO";
+    });
+}
+</script>
+{% endblock %}

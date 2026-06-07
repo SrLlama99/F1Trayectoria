@@ -1,0 +1,304 @@
+{% extends 'base.html.twig' %}
+
+{% set partidaId = partida.idPartida %}
+
+{% block title %}CASINO ROYAL - TRAGAPERRAS TURBO{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-4xl mx-auto space-y-6">
+
+			<header class="flex justify-between items-center bg-slate-900/40 border border-amber-500/25 p-4 rounded-xl backdrop-blur-sm">
+				<div class="flex items-center gap-3">
+					<span class="text-2xl p-2 bg-slate-950 rounded-lg border border-slate-800">🏎️</span>
+					<div>
+						<span class="text-amber-500 font-racing text-[10px] tracking-widest block uppercase">Bote Acumulado</span>
+						<h1 class="text-xl font-black font-racing uppercase tracking-wide">Tragaperras Turbo GP</h1>
+					</div>
+				</div>
+
+				<div class="text-right font-mono text-xs">
+					<span class="text-slate-500 block text-[9px] font-racing uppercase">Tu Cartera</span>
+					<span class="text-emerald-400 font-bold text-sm tracking-wide" id="cartera-visual">
+						€ {{ piloto.dinero|number_format(0, ',', '.') }}
+					</span>
+				</div>
+			</header>
+
+			<div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl relative overflow-hidden space-y-8">
+				<div class="absolute top-0 right-0 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+					<div class="space-y-2 font-mono text-xs text-slate-400 bg-slate-950/50 p-4 rounded-xl border border-slate-850">
+						<span class="text-amber-500 font-racing text-[10px] uppercase tracking-wider block mb-1">Tabla de Premios</span>
+						<p><span class="text-white">🏆 🏆 🏆 Triple Trofeo:</span> ¡Premio Gordo! (Multiplica x10)</p>
+						<p><span class="text-white">🏎️ 🏎️ 🏎️ Triple Monoplaza:</span> ¡Premio Alto! (Multiplica x5)</p>
+						<p><span class="text-white">🔧 🔧 🔧 Triple Llave Inglesa:</span> ¡Premio Medio! (Multiplica x3)</p>
+						<p><span class="text-white">🚦 🚦 🚦 Triple Semáforo / Par Doble:</span> ¡Reintegro Extra! (Multiplica x1.5)</p>
+					</div>
+
+					<div class="space-y-4 text-center max-w-sm mx-auto w-full">
+						<div class="bg-slate-950 border border-slate-800 p-4 rounded-xl shadow-inner">
+							<span class="text-[9px] font-racing text-slate-500 uppercase tracking-widest block mb-1">FONDOS ARRIESGADOS</span>
+							<div class="text-2xl font-black font-mono text-amber-400" id="texto-apuesta">€ 5.000</div>
+						</div>
+
+						<div class="grid grid-cols-4 gap-1.5 font-mono text-xs">
+							<button onclick="modificarApuesta(-5000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 px-1 py-2 rounded-lg text-rose-400 font-bold transition-all">-5K</button>
+							<button onclick="modificarApuesta(-1000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 px-1 py-2 rounded-lg text-rose-300 transition-all">-1K</button>
+							<button onclick="modificarApuesta(1000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 px-1 py-2 rounded-lg text-emerald-300 transition-all">+1K</button>
+							<button onclick="modificarApuesta(5000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 px-1 py-2 rounded-lg text-emerald-400 font-bold transition-all">+5K</button>
+						</div>
+					</div>
+				</div>
+
+				<div class="relative flex py-1 items-center">
+					<div class="flex-grow border-t border-slate-800/80"></div>
+					<span class="flex-shrink mx-4 text-[9px] font-mono text-slate-600 tracking-widest uppercase">Línea de Pago Activa</span>
+					<div class="flex-grow border-t border-slate-800/80"></div>
+				</div>
+
+				<div class="space-y-6 max-w-md mx-auto text-center">
+					<div class="grid grid-cols-3 gap-4 bg-slate-950 p-6 rounded-2xl border-2 border-slate-850 shadow-inner relative">
+						<div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-rose-500/30 border-y border-rose-500/10 pointer-events-none"></div>
+
+						<div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl py-6 text-4xl shadow-md transition-all duration-200 select-none" id="rodillo-1">🏎️</div>
+						<div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl py-6 text-4xl shadow-md transition-all duration-200 select-none" id="rodillo-2">🔧</div>
+						<div class="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-xl py-6 text-4xl shadow-md transition-all duration-200 select-none" id="rodillo-3">🏆</div>
+					</div>
+
+					<div id="mensaje-resultado" class="hidden text-center font-racing text-lg uppercase tracking-wide py-3 px-4 rounded-xl border block"></div>
+
+					<div id="wrapper-btn-tragaperras">
+						{% if piloto.jugadasCasino >= 3 %}
+							<button disabled class="w-full font-racing text-xs font-black tracking-widest uppercase bg-slate-800 border border-slate-700 text-slate-500 py-4 rounded-xl cursor-not-allowed opacity-60">
+								🚫 LÍMITE SEMANAL SUPERADO
+							</button>
+						{% else %}
+							<button onclick="tirarPalanca()" id="btn-girar-accion" class="w-full font-racing text-xs font-black tracking-widest uppercase bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 py-4 rounded-xl transition-all shadow-[0_4px_20px_rgba(245,158,11,0.2)] active:scale-[0.99]">
+								🎰 ACCIONAR RODILLOS 🎰
+							</button>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+
+			<div class="text-center">
+				<a href="/career/casino/{{ partida.idPartida }}" id="btn-salir" class="font-mono text-xs text-slate-500 hover:text-slate-300 transition-colors">
+					← Abandonar máquina y regresar al vestíbulo
+				</a>
+			</div>
+
+		</div>
+	</div>
+
+	<div id="modal-casino-aviso" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/80 transition-all duration-300">
+		<div class="bg-slate-900 border-2 border-rose-500/40 rounded-2xl max-w-md w-full p-6 shadow-[0_0_30px_rgba(244,63,94,0.15)] text-center space-y-4 relative overflow-hidden">
+			<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-orange-400 to-rose-500"></div>
+			<div class="w-16 h-16 bg-rose-500/10 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto text-2xl animate-pulse">🚫</div>
+			<div class="space-y-1">
+				<h3 id="modal-titulo" class="font-racing text-lg uppercase tracking-wide text-rose-400">Acceso Denegado</h3>
+				<p id="modal-mensaje" class="font-mono text-xs text-slate-400 leading-relaxed"></p>
+			</div>
+			<div class="pt-2 flex gap-2">
+				<button onclick="cerrarModalCasino()" id="btn-modal-accion" class="flex-1 font-mono text-xs font-bold uppercase bg-slate-950 hover:bg-slate-850 border border-slate-800 px-4 py-2.5 rounded-xl transition-all text-slate-300">Entendido</button>
+				<a href="/career/casino/{{ partida.idPartida }}" id="btn-modal-salir" class="hidden flex-1 font-racing text-xs font-black tracking-widest uppercase bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-slate-950 px-4 py-2.5 rounded-xl transition-all shadow-md text-center flex items-center justify-center">🚪 VOLVER AL MENÚ</a>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		let dineroDisponible = {{ piloto.dinero }};
+		let apuestaActual = 5000;
+		const minimaApuesta = 1000;
+
+		// 🛑 Control de transacciones semanales blindado
+		let jugadasEfectuadas = {{ piloto.jugadasCasino|default(0) }};
+		let limiteAlcanzado = jugadasEfectuadas >= 3;
+
+		let juegoBloqueado = false;
+
+		// 🏎️ RESTAURADOS: Tus símbolos de automovilismo originales exactos
+		const SimbolosTragaperras = ['🏎️', '🔧', '🏆', '🚦', '🔋', '💥'];
+
+		window.addEventListener('DOMContentLoaded', () => {
+			if (limiteAlcanzado) {
+				ejecutarBloqueoAbsoluto();
+			}
+		});
+
+		function mostrarModalCasino(titulo, mensaje, forzarSalida = false) {
+			document.getElementById('modal-titulo').innerText = titulo;
+			document.getElementById('modal-mensaje').innerText = mensaje;
+			
+			const btnAccion = document.getElementById('btn-modal-accion');
+			const btnSalir = document.getElementById('btn-modal-salir');
+
+			if (forzarSalida) {
+				btnAccion.classList.add('hidden');
+				btnSalir.classList.remove('hidden');
+			} else {
+				btnAccion.classList.remove('hidden');
+				btnSalir.classList.add('hidden');
+			}
+			document.getElementById('modal-casino-aviso').classList.remove('hidden');
+		}
+
+		function cerrarModalCasino() {
+			if (limiteAlcanzado) return;
+			document.getElementById('modal-casino-aviso').classList.add('hidden');
+		}
+
+		function modificarApuesta(cantidad) {
+			if (limiteAlcanzado) {
+				ejecutarBloqueoAbsoluto();
+				return;
+			}
+			if (juegoBloqueado) return;
+
+			apuestaActual += cantidad;
+			if (apuestaActual < minimaApuesta) apuestaActual = minimaApuesta;
+			if (apuestaActual > dineroDisponible) apuestaActual = dineroDisponible;
+
+			document.getElementById('texto-apuesta').innerText = '€ ' + apuestaActual.toLocaleString('es-ES');
+		}
+
+		function tirarPalanca() {
+			if (juegoBloqueado || limiteAlcanzado) return;
+
+			if (jugadasEfectuadas >= 3) {
+				ejecutarBloqueoAbsoluto();
+				return;
+			}
+
+			if (dineroDisponible < apuestaActual) {
+				mostrarModalCasino("SIN CRÉDITOS", "No dispones de capital suficiente para realizar este giro en la máquina.", false);
+				return;
+			}
+
+			juegoBloqueado = true;
+			document.getElementById('mensaje-resultado').classList.add('hidden');
+
+			const r1 = document.getElementById('rodillo-1');
+			const r2 = document.getElementById('rodillo-2');
+			const r3 = document.getElementById('rodillo-3');
+
+			r1.classList.add('blur-sm', 'scale-90');
+			r2.classList.add('blur-sm', 'scale-90');
+			r3.classList.add('blur-sm', 'scale-90');
+
+			let intervalosGiro = setInterval(() => {
+				r1.innerText = SimbolosTragaperras[Math.floor(Math.random() * SimbolosTragaperras.length)];
+				r2.innerText = SimbolosTragaperras[Math.floor(Math.random() * SimbolosTragaperras.length)];
+				r3.innerText = SimbolosTragaperras[Math.floor(Math.random() * SimbolosTragaperras.length)];
+			}, 70);
+
+			setTimeout(() => {
+				clearInterval(intervalosGiro);
+
+				r1.classList.remove('blur-sm', 'scale-90');
+				r2.classList.remove('blur-sm', 'scale-90');
+				r3.classList.remove('blur-sm', 'scale-90');
+
+				const s1 = SimbolosTragaperras[Math.floor(Math.random() * SimbolosTragaperras.length)];
+				const s2 = SimbolosTragaperras[Math.floor(Math.random() * SimbolosTragaperras.length)];
+				const s3 = SimbolosTragaperras[Math.floor(Math.random() * SimbolosTragaperras.length)];
+
+				r1.innerText = s1;
+				r2.innerText = s2;
+				r3.innerText = s3;
+
+				evaluarCombinacionTragaperras(s1, s2, s3);
+			}, 1200);
+		}
+
+		function evaluarCombinacionTragaperras(s1, s2, s3) {
+			let multiplicador = 0;
+			let mensajePremio = "SIN SUERTE";
+
+			if (s1 === '🏆' && s2 === '🏆' && s3 === '🏆') {
+				multiplicador = 10;
+				mensajePremio = "🏁 ¡TRIPLE TROFEO SUPREMO!";
+			} else if (s1 === '🏎️' && s2 === '🏎️' && s3 === '🏎️') {
+				multiplicador = 5;
+				mensajePremio = "🏎️ ¡TRIPLE MONOPLAZA!";
+			} else if (s1 === '🔧' && s2 === '🔧' && s3 === '🔧') {
+				multiplicador = 3;
+				mensajePremio = "🔧 ¡TRIPLE LLAVE INGLESA!";
+			} else if (s1 === s2 || s2 === s3 || s1 === s3) {
+				multiplicador = 1.5;
+				mensajePremio = "✨ PAR COMBINADO (REINTEGRO)";
+			}
+
+			procesarFinDeJugada(multiplicador, mensajePremio);
+		}
+
+		function procesarFinDeJugada(multiplicador, mensaje) {
+			const contenedorMsg = document.getElementById('mensaje-resultado');
+			contenedorMsg.className = "text-center font-racing text-lg uppercase tracking-wide py-3 px-4 rounded-xl border block max-w-md mx-auto";
+			
+			let statusApi = 'BANCA_GANA';
+			let balanceNeto = apuestaActual;
+			let dineroPrevio = dineroDisponible;
+
+			if (multiplicador > 0) {
+				statusApi = 'JUGADOR_GANA';
+				balanceNeto = (apuestaActual * multiplicador) - apuestaActual;
+				dineroDisponible += balanceNeto;
+				contenedorMsg.innerText = `${mensaje} +€${(apuestaActual * multiplicador).toLocaleString('es-ES')}`;
+				contenedorMsg.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+			} else {
+				dineroDisponible -= apuestaActual;
+				contenedorMsg.innerText = `❌ SIN SUERTE (-€${apuestaActual.toLocaleString('es-ES')})`;
+				contenedorMsg.classList.add('bg-rose-500/10', 'border-rose-500/30', 'text-rose-400');
+			}
+
+			document.getElementById('cartera-visual').innerText = '€ ' + dineroDisponible.toLocaleString('es-ES');
+
+			// Incremento predictivo local contra spam de clicks
+			jugadasEfectuadas++;
+
+			// 🌟 LLAMADA AJAX SEGURA CON PARAMETRIZACIÓN OFICIAL DE {{ partidaId }}
+			fetch(`/career/casino/api/save-tragaperras/{{ partidaId }}/${statusApi}/${apuestaActual}`)
+				.then(response => {
+					if (response.status === 403) {
+						limiteAlcanzado = true;
+						dineroDisponible = dineroPrevio;
+						document.getElementById('cartera-visual').innerText = '€ ' + dineroDisponible.toLocaleString('es-ES');
+						
+						contenedorMsg.className = "text-center font-racing text-lg uppercase tracking-wide py-3 rounded-xl border block bg-rose-500/20 border-rose-500 text-rose-400 max-w-md mx-auto";
+						contenedorMsg.innerText = "🛑 LÍMITE DE JUGADAS ALCANZADO.";
+						
+						ejecutarBloqueoAbsoluto();
+					} else {
+						if (jugadasEfectuadas >= 3) {
+							ejecutarBloqueoAbsoluto();
+						} else {
+							juegoBloqueado = false;
+						}
+					}
+				})
+				.catch(error => {
+					console.error("Error de persistencia en tragaperras:", error);
+					juegoBloqueado = false;
+				});
+		}
+
+		function ejecutarBloqueoAbsoluto() {
+			limiteAlcanzado = true;
+			juegoBloqueado = true;
+			
+			document.getElementById('wrapper-btn-tragaperras').innerHTML = `
+				<button disabled class="w-full font-racing text-xs font-black tracking-widest uppercase bg-slate-800 border border-slate-700 text-slate-500 py-4 rounded-xl cursor-not-allowed opacity-60">
+					🚫 LÍMITE SEMANAL SUPERADO
+				</button>
+			`;
+
+			mostrarModalCasino(
+				"LÍMITE ALCANZADO", 
+				"El pit lane del casino se ha cerrado. Se ha alcanzado el número máximo de giros de tragaperras permitidos de forma oficial.", 
+				true
+			);
+		}
+	</script>
+{% endblock %}

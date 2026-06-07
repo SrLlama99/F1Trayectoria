@@ -1,0 +1,367 @@
+{% extends 'base.html.twig' %}
+
+{% set partidaId = partida.idPartida %}
+
+{% block title %}CASINO ROYAL - RULETA EUROPEA{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-6xl mx-auto space-y-6">
+
+			<header class="flex justify-between items-center bg-slate-900/40 border border-amber-500/25 p-4 rounded-xl backdrop-blur-sm">
+				<div class="flex items-center gap-3">
+					<span class="text-2xl p-2 bg-slate-950 rounded-lg border border-slate-800">🎡</span>
+					<div>
+						<span class="text-amber-500 font-racing text-[10px] tracking-widest block uppercase">Hagan juego, señores</span>
+						<h1 class="text-xl font-black font-racing uppercase tracking-wide">Ruleta Europea</h1>
+					</div>
+				</div>
+
+				<div class="text-right font-mono text-xs">
+					<span class="text-slate-500 block text-[9px] font-racing uppercase">Tu Cartera</span>
+					<span class="text-emerald-400 font-bold text-sm tracking-wide" id="cartera-visual">
+						€ {{ piloto.dinero|number_format(0, ',', '.') }}
+					</span>
+				</div>
+			</header>
+
+			<div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl relative overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+				<div class="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+				<div class="lg:col-span-4 flex flex-col items-center justify-center space-y-6">
+					
+					<div class="relative w-64 h-64 rounded-full border-4 border-slate-950 shadow-[0_0_40px_rgba(0,0,0,0.6)] bg-gradient-to-b from-amber-900 to-amber-950 flex items-center justify-center overflow-hidden">
+						<div id="ruleta-grafica" class="absolute inset-2 rounded-full border border-amber-600/30 bg-slate-950 flex items-center justify-center transition-transform duration-[4s] cubic-bezier(0.1, 0.8, 0.1, 1)">
+							<div class="absolute w-full h-full rounded-full border-4 border-emerald-900/40 animate-pulse"></div>
+							<div class="w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 via-slate-200 to-slate-500 shadow-md border border-slate-600 flex items-center justify-center z-10">
+								<div class="w-4 h-4 rounded-full bg-slate-950"></div>
+							</div>
+						</div>
+						
+						<div class="absolute z-20 bg-slate-900/90 border-2 border-slate-800 w-16 h-16 rounded-xl flex flex-col items-center justify-center shadow-2xl">
+							<span class="text-[8px] font-mono text-slate-500 font-bold uppercase tracking-widest block">NÚMERO</span>
+							<span id="pantalla-numero-ganador" class="text-xl font-black font-mono text-white">-</span>
+						</div>
+					</div>
+
+					<div id="mensaje-resultado" class="hidden text-center font-racing text-sm uppercase tracking-wide py-3 px-4 rounded-xl border block w-full max-w-sm"></div>
+
+					<div class="w-full max-w-sm space-y-4">
+						<div class="bg-slate-950 border border-slate-850 p-4 rounded-xl text-center shadow-inner">
+							<span class="text-[9px] font-racing text-slate-500 uppercase tracking-widest block mb-1">Monto Arriesgado</span>
+							<div id="texto-apuesta" class="text-xl font-black font-mono text-amber-400">€ 5.000</div>
+						</div>
+
+						<div class="grid grid-cols-4 gap-1.5 font-mono text-xs">
+							<button onclick="modificarApuesta(-5000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 py-2 rounded-lg text-rose-400 font-bold transition-colors">-5K</button>
+							<button onclick="modificarApuesta(-1000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 py-2 rounded-lg text-rose-300 transition-colors">-1K</button>
+							<button onclick="modificarApuesta(1000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 py-2 rounded-lg text-emerald-300 transition-colors">+1K</button>
+							<button onclick="modificarApuesta(5000)" class="bg-slate-950 hover:bg-slate-850 border border-slate-850 py-2 rounded-lg text-emerald-400 font-bold transition-colors">+5K</button>
+						</div>
+
+						<div id="wrapper-btn-ruleta">
+							{% if piloto.jugadasCasino >= 3 %}
+								<button disabled class="w-full font-racing text-xs font-black tracking-widest uppercase bg-slate-800 border border-slate-700 text-slate-500 py-4 rounded-xl cursor-not-allowed opacity-60">
+									🚫 LÍMITE SEMANAL SUPERADO
+								</button>
+							{% else %}
+								<button onclick="jugarRuleta()" id="btn-girar-accion" class="w-full font-racing text-xs font-black tracking-widest uppercase bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 py-4 rounded-xl transition-all shadow-[0_4px_20px_rgba(16,185,129,0.2)] active:scale-[0.99]">
+									🟢 GIRAR RULETA 🎡
+								</button>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+
+				<div class="lg:col-span-8 space-y-4">
+					<div class="bg-slate-950/50 border border-slate-850 p-4 rounded-xl space-y-4">
+						<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800/60 pb-2">
+							<div>
+								<span class="text-amber-500 font-racing text-[10px] uppercase tracking-wider block">Mesa Oficial de Apuestas</span>
+								<h2 class="text-xs font-mono text-slate-400">Haz clic sobre un número exacto o una suerte simple</h2>
+							</div>
+							<div class="bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg font-mono text-[10px]">
+								<span class="text-slate-500">Ficha en: </span>
+								<span id="texto-ficha-seleccionada" class="text-amber-400 font-bold uppercase tracking-wide">Ninguna</span>
+							</div>
+						</div>
+						
+						<div class="grid grid-cols-6 sm:grid-cols-7 md:grid-cols-10 gap-1.5 font-mono text-xs">
+							<button onclick="seleccionarApuesta('NUMERO_0', 'Número 0 (x35)')" id="opc-NUMERO_0" class="casilla-opcion bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/40 py-2.5 rounded-lg font-black text-emerald-400 transition-all col-span-2 sm:col-span-1">
+								0
+							</button>
+
+							{% set rojos = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36] %}
+							{% for n in 1..36 %}
+								{% set esRojo = n in rojos %}
+								<button onclick="seleccionarApuesta('NUMERO_{{ n }}', 'Número {{ n }} (x35)')" id="opc-NUMERO_{{ n }}" class="casilla-opcion border py-2.5 rounded-lg font-bold transition-all {{ esRojo ? 'bg-red-600/15 hover:bg-red-600/35 border-red-600/30 text-red-400' : 'bg-slate-850 hover:bg-slate-700 border-slate-700 text-slate-300' }}">
+									{{ n }}
+								</button>
+							{% endfor %}
+						</div>
+
+						<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-xs pt-2">
+							<button onclick="seleccionarApuesta('ROJO', 'Color Rojo (x2)')" id="opc-ROJO" class="casilla-opcion bg-red-600/10 hover:bg-red-600/20 border border-red-500/25 py-3 rounded-xl font-bold transition-all text-red-400 uppercase tracking-wider">
+								🔴 Rojo
+							</button>
+							<button onclick="seleccionarApuesta('NEGRO', 'Color Negro (x2)')" id="opc-NEGRO" class="casilla-opcion bg-slate-900 hover:bg-slate-850 border border-slate-800 py-3 rounded-xl font-bold transition-all text-slate-300 uppercase tracking-wider">
+								⚫ Negro
+							</button>
+							<button onclick="seleccionarApuesta('PAR', 'Números Pares (x2)')" id="opc-PAR" class="casilla-opcion bg-slate-900 hover:bg-slate-850 border border-slate-800 py-3 rounded-xl transition-all text-slate-400 uppercase tracking-wider">
+								🔢 PAR
+							</button>
+							<button onclick="seleccionarApuesta('IMPAR', 'Números Impares (x2)')" id="opc-IMPAR" class="casilla-opcion bg-slate-900 hover:bg-slate-850 border border-slate-800 py-3 rounded-xl transition-all text-slate-400 uppercase tracking-wider">
+								🔢 IMPAR
+							</button>
+						</div>
+					</div>
+
+					<div class="border border-slate-850 rounded-xl p-4 font-mono text-xs space-y-2 bg-slate-950/20">
+						<span class="text-slate-500 text-[9px] uppercase font-racing tracking-widest block">Telemetría de la Mesa</span>
+						<p class="text-slate-400 leading-relaxed">Las apuestas de pleno (un único número específico elegido en la cuadrícula del <strong class="text-white">0 al 36</strong>) liquidan un premio mayor de <strong class="text-amber-400 font-bold">x35</strong> veces la cantidad arriesgada. Las suertes externas duplican tus créditos (<strong class="text-emerald-400 font-bold">x2</strong>).</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="text-center">
+				<a href="/career/casino/{{ partida.idPartida }}" id="btn-salir" class="font-mono text-xs text-slate-500 hover:text-slate-300 transition-colors">
+					← Retirarse de la ruleta y volver al vestíbulo
+				</a>
+			</div>
+
+		</div>
+	</div>
+
+	<div id="modal-casino-aviso" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-950/80 transition-all duration-300">
+		<div class="bg-slate-900 border-2 border-rose-500/40 rounded-2xl max-w-md w-full p-6 shadow-[0_0_30px_rgba(244,63,94,0.15)] text-center space-y-4 relative overflow-hidden">
+			<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 via-orange-400 to-rose-500"></div>
+			<div class="w-16 h-16 bg-rose-500/10 border border-rose-500/30 rounded-full flex items-center justify-center mx-auto text-2xl animate-pulse">🚫</div>
+			<div class="space-y-1">
+				<h3 id="modal-titulo" class="font-racing text-lg uppercase tracking-wide text-rose-400">Acceso Denegado</h3>
+				<p id="modal-mensaje" class="font-mono text-xs text-slate-400 leading-relaxed"></p>
+			</div>
+			<div class="pt-2 flex gap-2">
+				<button onclick="cerrarModalCasino()" id="btn-modal-accion" class="flex-1 font-mono text-xs font-bold uppercase bg-slate-950 hover:bg-slate-850 border border-slate-800 px-4 py-2.5 rounded-xl transition-all text-slate-300">Entendido</button>
+				<a href="/career/casino/{{ partida.idPartida }}" id="btn-modal-salir" class="hidden flex-1 font-racing text-xs font-black tracking-widest uppercase bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-slate-950 px-4 py-2.5 rounded-xl transition-all shadow-md text-center flex items-center justify-center">🚪 VOLVER AL MENÚ</a>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		let dineroDisponible = {{ piloto.dinero }};
+		let apuestaActual = 5000;
+		const minimaApuesta = 1000;
+
+		// 🛑 Control de transacciones semanales espejo de Blackjack
+		let jugadasEfectuadas = {{ piloto.jugadasCasino|default(0) }};
+		let limiteAlcanzado = jugadasEfectuadas >= 3;
+
+		let tipoApuestaSeleccionado = null;
+		let juegoBloqueado = false;
+
+		const numerosRojos = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+
+		window.addEventListener('DOMContentLoaded', () => {
+			if (limiteAlcanzado) {
+				ejecutarBloqueoAbsoluto();
+			}
+		});
+
+		function mostrarModalCasino(titulo, mensaje, forzarSalida = false) {
+			document.getElementById('modal-titulo').innerText = titulo;
+			document.getElementById('modal-mensaje').innerText = mensaje;
+			
+			const btnAccion = document.getElementById('btn-modal-accion');
+			const btnSalir = document.getElementById('btn-modal-salir');
+
+			if (forzarSalida) {
+				btnAccion.classList.add('hidden');
+				btnSalir.classList.remove('hidden');
+			} else {
+				btnAccion.classList.remove('hidden');
+				btnSalir.classList.add('hidden');
+			}
+			document.getElementById('modal-casino-aviso').classList.remove('hidden');
+		}
+
+		function cerrarModalCasino() {
+			if (limiteAlcanzado) return;
+			document.getElementById('modal-casino-aviso').classList.add('hidden');
+		}
+
+		function modificarApuesta(cantidad) {
+			if (limiteAlcanzado) {
+				ejecutarBloqueoAbsoluto();
+				return;
+			}
+			if (juegoBloqueado) return;
+
+			apuestaActual += cantidad;
+			if (apuestaActual < minimaApuesta) apuestaActual = minimaApuesta;
+			if (apuestaActual > dineroDisponible) apuestaActual = dineroDisponible;
+
+			document.getElementById('texto-apuesta').innerText = '€ ' + apuestaActual.toLocaleString('es-ES');
+		}
+
+		function seleccionarApuesta(tipo, etiqueta) {
+			if (limiteAlcanzado) {
+				ejecutarBloqueoAbsoluto();
+				return;
+			}
+			if (juegoBloqueado) return;
+
+			tipoApuestaSeleccionado = tipo;
+			
+			document.querySelectorAll('.casilla-opcion').forEach(el => {
+				el.classList.remove('ring-2', 'ring-amber-400', 'scale-[1.03]', 'z-10');
+			});
+
+			const activa = document.getElementById(`opc-${tipo}`);
+			if (activa) {
+				activa.classList.add('ring-2', 'ring-amber-400', 'scale-[1.03]', 'z-10');
+			}
+
+			document.getElementById('texto-ficha-seleccionada').innerText = etiqueta;
+		}
+
+		function jugarRuleta() {
+			if (juegoBloqueado || limiteAlcanzado) return;
+
+			if (jugadasEfectuadas >= 3) {
+				ejecutarBloqueoAbsoluto();
+				return;
+			}
+
+			if (!tipoApuestaSeleccionado) {
+				mostrarModalCasino("HAGAN JUEGO", "Selecciona un número o color del tapete antes de girar.", false);
+				return;
+			}
+
+			if (dineroDisponible < apuestaActual) {
+				mostrarModalCasino("FONDOS INSUFICIENTES", "Tu cartera no dispone del saldo suficiente para cubrir la apuesta.", false);
+				return;
+			}
+
+			juegoBloqueado = true;
+			document.getElementById('mensaje-resultado').classList.add('hidden');
+			document.getElementById('pantalla-numero-ganador').innerText = "-";
+
+			const ruleta = document.getElementById('ruleta-grafica');
+			const gradosAleatorios = 1440 + Math.floor(Math.random() * 360);
+			ruleta.style.transform = `rotate(${gradosAleatorios}deg)`;
+
+			setTimeout(() => {
+				const numeroGanador = Math.floor(Math.random() * 37);
+				document.getElementById('pantalla-numero-ganador').innerText = numeroGanador;
+				
+				ruleta.style.transition = 'none';
+				ruleta.style.transform = `rotate(${gradosAleatorios % 360}deg)`;
+				ruleta.offsetHeight;
+				ruleta.style.transition = 'transform 4s cubic-bezier(0.1, 0.8, 0.1, 1)';
+
+				evaluarResultadoRuleta(numeroGanador);
+			}, 4000);
+		}
+
+		function evaluarResultadoRuleta(numero) {
+			let esRojo = numerosRojos.includes(numero);
+			let esCero = (numero === 0);
+			let esPar = (numero % 2 === 0) && !esCero;
+
+			let victoria = false;
+			let multiplicador = 1;
+
+			// Evaluamos si el jugador apostó a un número pleno exacto
+			if (tipoApuestaSeleccionado.startsWith('NUMERO_')) {
+				let numeroApostado = parseInt(tipoApuestaSeleccionado.replace('NUMERO_', ''), 10);
+				if (numeroApostado === numero) {
+					victoria = true;
+					multiplicador = 35;
+				}
+			} 
+			// Evaluamos apuestas secundarias / suertes simples
+			else if (tipoApuestaSeleccionado === 'ROJO' && esRojo && !esCero) {
+				victoria = true;
+				multiplicador = 2;
+			} else if (tipoApuestaSeleccionado === 'NEGRO' && !esRojo && !esCero) {
+				victoria = true;
+				multiplicador = 2;
+			} else if (tipoApuestaSeleccionado === 'PAR' && esPar) {
+				victoria = true;
+				multiplicador = 2;
+			} else if (tipoApuestaSeleccionado === 'IMPAR' && !esPar && !esCero) {
+				victoria = true;
+				multiplicador = 2;
+			}
+
+			procesarFinDeJugada(victoria, multiplicador, numero);
+		}
+
+		function procesarFinDeJugada(victoria, multiplicadorActual, numero) {
+			const contenedorMsg = document.getElementById('mensaje-resultado');
+			contenedorMsg.className = "text-center font-racing text-sm uppercase tracking-wide py-3 px-4 rounded-xl border block w-full max-w-sm mx-auto";
+			
+			let statusApi = 'BANCA_GANA';
+			let balanceNeto = apuestaActual;
+			let dineroPrevio = dineroDisponible;
+
+			if (victoria) {
+				statusApi = 'JUGADOR_GANA';
+				balanceNeto = (apuestaActual * multiplicadorActual) - apuestaActual;
+				dineroDisponible += balanceNeto;
+				contenedorMsg.innerText = `🎯 ¡NÚMERO ${numero}! GANASTE €${(apuestaActual * multiplicadorActual).toLocaleString('es-ES')}`;
+				contenedorMsg.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+			} else {
+				dineroDisponible -= apuestaActual;
+				contenedorMsg.innerText = `❌ NÚMERO ${numero}. PERDISTE €${apuestaActual.toLocaleString('es-ES')}`;
+				contenedorMsg.classList.add('bg-rose-500/10', 'border-rose-500/30', 'text-rose-400');
+			}
+
+			document.getElementById('cartera-visual').innerText = '€ ' + dineroDisponible.toLocaleString('es-ES');
+
+			// Incremento local para proteger contra spam de clicks en el intervalo del fetch
+			jugadasEfectuadas++;
+
+			fetch(`/career/casino/api/save-ruleta/{{ partidaId }}/${statusApi}/${apuestaActual}`)
+				.then(response => {
+					if (response.status === 403) {
+						limiteAlcanzado = true;
+						dineroDisponible = dineroPrevio;
+						document.getElementById('cartera-visual').innerText = '€ ' + dineroDisponible.toLocaleString('es-ES');
+						
+						contenedorMsg.className = "text-center font-racing text-lg uppercase tracking-wide py-3 rounded-xl border block bg-rose-500/20 border-rose-500 text-rose-400 w-full max-w-sm mx-auto";
+						contenedorMsg.innerText = "🛑 LÍMITE DE JUGADAS ALCANZADO.";
+						
+						ejecutarBloqueoAbsoluto();
+					} else {
+						if (jugadasEfectuadas >= 3) {
+							ejecutarBloqueoAbsoluto();
+						} else {
+							juegoBloqueado = false;
+						}
+					}
+				})
+				.catch(error => {
+					console.error("Error de persistencia:", error);
+					juegoBloqueado = false;
+				});
+		}
+
+		function ejecutarBloqueoAbsoluto() {
+			limiteAlcanzado = true;
+			juegoBloqueado = true;
+			
+			document.getElementById('wrapper-btn-ruleta').innerHTML = `
+				<button disabled class="w-full font-racing text-xs font-black tracking-widest uppercase bg-slate-800 border border-slate-700 text-slate-500 py-4 rounded-xl cursor-not-allowed opacity-60">
+					🚫 LÍMITE SEMANAL SUPERADO
+				</button>
+			`;
+
+			mostrarModalCasino(
+				"LÍMITE ALCANZADO", 
+				"El pit lane del casino se ha cerrado. Se ha alcanzado el número máximo de giros de ruleta permitidos de forma oficial.", 
+				true
+			);
+		}
+	</script>
+{% endblock %}

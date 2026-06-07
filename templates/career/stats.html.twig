@@ -1,0 +1,194 @@
+{% extends 'base.html.twig' %}
+
+{% set partidaId = partida.idPartida %}
+
+{% block title %}FIA CENTRAL - I+D HABILIDADES{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-7xl mx-auto space-y-6">
+
+			<!-- CABECERA: ESTADO DE LICENCIA Y PUNTOS -->
+			<header class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center bg-slate-900/40 border border-slate-900 p-4 rounded-xl backdrop-blur-sm">
+				<div>
+					<span class="text-cyan-400 font-racing text-xs tracking-widest block uppercase">Desarrollo de Piloto // R&D</span>
+					<h1 class="text-2xl font-black font-racing uppercase italic mt-0.5">ÁRBOL DE <span class="text-cyan-400">HABILIDADES</span></h1>
+				</div>
+
+				<div class="bg-slate-950/60 border border-slate-900 rounded-lg p-2.5 px-3 flex flex-col justify-between h-full font-mono text-xs">
+					<div class="flex justify-between items-center mb-1.5">
+						<div class="flex items-center gap-1.5">
+							<span class="text-slate-500 text-[10px] font-racing uppercase">NIVEL</span>
+							<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.2 rounded font-bold text-xs">{{ piloto.nivelActual }}</span>
+						</div>
+						<div>
+							<span class="text-[9px] text-slate-500 uppercase font-racing">Licencia de Competición</span>
+						</div>
+					</div>
+
+					<div class="space-y-1">
+						<div class="flex justify-between items-center text-[10px] text-slate-400">
+							<span>Progreso de Nivel</span>
+							<span class="text-slate-300 font-bold">{{ piloto.expActual }} / {{ expNecesaria }} EXP</span>
+						</div>
+						<div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-slate-950">
+							<div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-full transition-all duration-500" style="width: {{ porcentajeExp }}%"></div>
+						</div>
+					</div>
+				</div>
+
+				<div class="grid grid-cols-2 gap-3 h-full">
+					<!-- Caja de Puntos (Con ID para refresco AJAX) -->
+					<div id="contenedor-puntos" class="bg-slate-950/40 border border-slate-900 p-2.5 rounded-lg flex flex-col justify-center items-center text-center font-mono">
+						<span class="text-slate-500 text-[9px] font-racing uppercase tracking-wider block mb-0.5">Puntos Libres</span>
+						<span id="puntos-valor" class="text-lg font-black bg-slate-900 px-3 py-0.5 rounded-md w-full border {{ piloto.puntosHabilidadDisponibles > 0 ? 'text-amber-400 animate-pulse border-amber-500/20' : 'text-slate-500 border-slate-800' }}">
+							{{ piloto.puntosHabilidadDisponibles > 0 ? '✨ ' ~ piloto.puntosHabilidadDisponibles ~ ' PTS' : '0 PTS' }}
+						</span>
+					</div>
+
+					<!-- Media Global (Con ID para refresco AJAX) -->
+					<div class="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border border-cyan-500/20 p-2.5 rounded-lg flex items-center justify-between px-4 font-mono">
+						<div>
+							<span class="text-slate-400 block text-[9px] font-racing uppercase leading-none mb-1">Media</span>
+							<span class="text-[10px] text-cyan-400 font-bold uppercase tracking-tight">GLOBAL</span>
+						</div>
+						<div id="media-global-badge" class="bg-gradient-to-br from-cyan-500 to-blue-600 text-slate-950 w-10 h-10 rounded-lg flex items-center justify-center border border-cyan-400 font-bold text-lg shadow-md">
+							{{ mediaStats }}
+						</div>
+					</div>
+				</div>
+			</header>
+
+			<!-- CUERPO PRINCIPAL -->
+			<div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl relative overflow-hidden">
+				<div class="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+				
+				<div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
+					<p class="text-xs font-mono text-slate-400">
+						💡 <span class="text-slate-200 font-bold">Instrucciones:</span> Utiliza tus puntos de habilidad para optimizar los parámetros del monoplaza. Cada mejora consume <span class="text-amber-400 font-bold">1 punto</span> sin recargar la página.
+					</p>
+					<a href="/career/main/{{ partida.idPartida }}" class="text-[11px] font-racing bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white px-3 py-1.5 rounded transition-all">
+						← VOLVER AL PADDOCK
+					</a>
+				</div>
+
+				<!-- Grid contenedor con data-action para el script -->
+				<div id="contenedor-habilidades" data-url="{{ path('app_career_upgrade_stats', {'partidaId': partida.idPartida}) }}" class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+					
+					{# Macro de Twig adaptada con selectores identificables #}
+					{% macro stat_row(label, value, field_name, puntos_disponibles) %}
+						<div id="card-{{ field_name }}" class="bg-slate-950/50 border border-slate-900 p-4 rounded-xl flex flex-col justify-between space-y-3 transition-all hover:border-slate-800">
+							<div>
+								<div class="flex justify-between items-center mb-1">
+									<span class="text-slate-300 font-bold text-sm tracking-wide">{{ label }}</span>
+									<span class="text-white font-black bg-slate-900 px-2 py-0.5 rounded border border-slate-800 text-xs">
+										<span class="stat-number">{{ value }}</span> <span class="text-slate-600 font-normal">/ 100</span>
+									</span>
+								</div>
+								
+								<div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-950">
+									<div class="stat-bar bg-gradient-to-r from-cyan-500 to-blue-500 h-full transition-all duration-300" style="width: {{ value }}%"></div>
+								</div>
+							</div>
+
+							<div class="flex justify-end">
+								<button type="button" 
+								        data-stat="{{ field_name }}" 
+								        {% if puntos_disponibles == 0 or value >= 100 %}disabled{% endif %}
+								        class="btn-upgrade flex items-center gap-1 font-racing text-[10px] font-bold tracking-wider uppercase px-3 py-1.5 rounded transition-all disabled:opacity-40 disabled:cursor-not-allowed
+								               {{ (puntos_disponibles > 0 and value < 100) ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-[0_2px_10px_rgba(6,182,212,0.2)]' : 'bg-slate-900 border border-slate-800 text-slate-600' }}">
+									{{ value >= 100 ? 'MÁXIMO ALCANZADO' : (puntos_disponibles > 0 ? '➕ MEJORAR ATRIBUTO' : 'PUNTOS INSUFICIENTES') }}
+								</button>
+							</div>
+						</div>
+					{% endmacro %}
+
+					{{ _self.stat_row('Velocidad de Clasificación', piloto.statClasificacion, 'clasificacion', piloto.puntosHabilidadDisponibles) }}
+					{{ _self.stat_row('Ritmo', piloto.statRitmo, 'ritmo', piloto.puntosHabilidadDisponibles) }}
+					{{ _self.stat_row('Capacidad de Adelantamiento', piloto.statAdelantamiento, 'adelantamiento', piloto.puntosHabilidadDisponibles) }}
+					{{ _self.stat_row('Defensa de Posición', piloto.statDefensa, 'defensa', piloto.puntosHabilidadDisponibles) }}
+					{{ _self.stat_row('Gestión de Neumáticos', piloto.statGestionNeumaticos, 'gestionNeumaticos', piloto.puntosHabilidadDisponibles) }}
+					{{ _self.stat_row('Conducción en Mojado', piloto.statMojado, 'mojado', piloto.puntosHabilidadDisponibles) }}
+
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<!-- ENGINE MOTOR DE ACTUALIZACIÓN AJAX ASÍNCRONO -->
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+			const container = document.getElementById('contenedor-habilidades');
+			const endpointUrl = container.getAttribute('data-url');
+
+			container.addEventListener('click', async (e) => {
+				const button = e.target.closest('.btn-upgrade');
+				if (!button || button.disabled) return;
+
+				const statName = button.getAttribute('data-stat');
+				button.disabled = true; // Evita el doble click mientras procesa
+
+				try {
+					const response = await fetch(endpointUrl, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest'
+						},
+						body: JSON.stringify({ stat: statName })
+					});
+
+					const resData = await response.json();
+
+					if (resData.success) {
+						// 1. Localizar la tarjeta de la stat modificada y actualizar su UI
+						const card = document.getElementById(`card-${statName}`);
+						if (card) {
+							card.querySelector('.stat-number').textContent = resData.nuevoValor;
+							card.querySelector('.stat-bar').style.width = `${resData.nuevoValor}%`;
+							
+							// Si llegó al tope, deshabilitamos definitivamente
+							if (resData.nuevoValor >= 100) {
+								button.textContent = 'MÁXIMO ALCANZADO';
+								button.className = 'btn-upgrade text-[10px] font-racing uppercase bg-slate-900 border border-slate-800 text-slate-600 px-3 py-1.5 rounded cursor-not-allowed';
+							}
+						}
+
+						// 2. Actualizar el marcador global de la media general
+						document.getElementById('media-global-badge').textContent = resData.mediaStats;
+
+						// 3. Re-evaluar y actualizar el panel superior de puntos de habilidad
+						const puntosValor = document.getElementById('puntos-valor');
+						if (resData.puntosDisponibles > 0) {
+							puntosValor.textContent = `✨ ${resData.puntosDisponibles} PTS`;
+							puntosValor.className = "text-lg font-black bg-slate-900 px-3 py-0.5 rounded-md w-full border text-amber-400 animate-pulse border-amber-500/20";
+							
+							// Restaurar el botón actual si aún le quedan puntos y no es 100
+							if (resData.nuevoValor < 100) button.disabled = false;
+						} else {
+							puntosValor.textContent = '0 PTS';
+							puntosValor.className = "text-lg font-black bg-slate-900 px-3 py-0.5 rounded-md w-full border text-slate-500 border-slate-800";
+							
+							// Desactivar absolutamente TODOS los botones del panel porque se agotaron los puntos
+							document.querySelectorAll('.btn-upgrade').forEach(btn => {
+								if (!btn.textContent.includes('MÁXIMO')) {
+									btn.textContent = 'PUNTOS INSUFICIENTES';
+									btn.disabled = true;
+									btn.className = 'btn-upgrade text-[10px] font-racing uppercase bg-slate-900 border border-slate-800 text-slate-600 px-3 py-1.5 rounded cursor-not-allowed';
+								}
+							});
+						}
+
+					} else {
+						alert(resData.error || 'Error desconocido.');
+						button.disabled = false;
+					}
+				} catch (error) {
+					console.error("F1 R&D System Error:", error);
+					button.disabled = false;
+				}
+			});
+		});
+	</script>
+{% endblock %}

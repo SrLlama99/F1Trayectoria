@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}FIA - SELECCIÓN DE DORSAL{% endblock %}
+
+{% block body %}
+<div class="relative min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white p-6">
+    <div class="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,24,38,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.2)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+    <div class="relative z-10 w-full max-w-4xl text-center">
+        <header class="mb-8">
+            <span class="text-cyan-400 font-bold tracking-widest text-xs uppercase px-3 py-1 bg-cyan-500/10 rounded-full border border-cyan-500/20">Registro de Pilotos</span>
+            <h1 class="text-3xl font-extrabold tracking-tight mt-2 text-slate-100 uppercase">ELIGE TU NÚMERO OFICIAL</h1>
+            <p class="text-sm text-slate-400 mt-1">Este dorsal te acompañará en tu monoplaza durante toda tu estancia en la división Karting.</p>
+        </header>
+
+        <!-- Contenedor Principal Gráfico -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-6 shadow-2xl backdrop-blur-sm max-w-3xl mx-auto">
+            <!-- Grid de Números -->
+            <div class="grid grid-cols-7 sm:grid-cols-10 gap-2 max-h-[360px] overflow-y-auto p-2 border border-slate-950 bg-slate-950/40 rounded-lg shadow-inner">
+                {% for i in 1..99 %}
+                    {% if i in numerosOcupados %}
+                        <!-- Botón número ocupado -->
+                        <div class="aspect-square flex items-center justify-center text-xs font-mono font-bold bg-slate-900 text-slate-600 border border-slate-800/40 rounded cursor-not-allowed opacity-30 select-none line-through" title="Ocupado por la IA">
+                            {{ i }}
+                        </div>
+                    {% else %}
+                        <!-- Botón número disponible -->
+                        <button onclick="seleccionarDorsal(this, {{ i }})" class="dorsal-btn aspect-square flex items-center justify-center text-sm font-mono font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 hover:border-cyan-500 rounded transition-all focus:outline-none">
+                            {{ i }}
+                        </button>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Panel de Confirmación Inferior -->
+            <div class="mt-8 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-left">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider font-bold block">Dorsal Seleccionado</span>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="displayNumero" class="text-4xl font-black font-mono italic text-yellow-400">--</span>
+                        <span class="text-xs text-slate-400 font-semibold" id="labelEstado">Ninguno seleccionado</span>
+                    </div>
+                </div>
+
+                <button id="btnConfirmar" onclick="enviarDorsal()" disabled class="w-full sm:w-auto bg-slate-800 text-slate-500 font-bold py-3 px-8 rounded-lg border border-slate-700 transition-all cursor-not-allowed text-sm uppercase tracking-wider">
+                    CONFIRMAR E INICIAR TRAYECTORIA
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let numeroSeleccionado = null;
+
+function seleccionarDorsal(btn, numero) {
+    // 1. Quitar la clase activa de todos los botones disponibles
+    document.querySelectorAll('.dorsal-btn').forEach(b => {
+        b.classList.remove('bg-cyan-600', 'text-white', 'border-cyan-400', 'scale-105', 'shadow-md');
+        b.classList.add('bg-slate-800', 'text-slate-200', 'border-slate-700');
+    });
+
+    // 2. Activar visualmente el botón clickeado
+    btn.classList.remove('bg-slate-800', 'text-slate-200', 'border-slate-700');
+    btn.classList.add('bg-cyan-600', 'text-white', 'border-cyan-400', 'scale-105', 'shadow-md');
+
+    // 3. Actualizar variables e interfaz inferior
+    numeroSeleccionado = numero;
+    document.getElementById('displayNumero').innerText = String(numero).padStart(2, '0');
+    document.getElementById('labelEstado').innerText = "DISPONIBLE PARA DISPUTA";
+    document.getElementById('labelEstado').className = "text-xs text-emerald-400 font-bold";
+
+    // 4. Activar el botón de confirmación definitivo
+    const btnConfirmar = document.getElementById('btnConfirmar');
+    btnConfirmar.disabled = false;
+    btnConfirmar.className = "w-full sm:w-auto bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black py-3 px-8 rounded-lg border border-cyan-400 transition-all shadow-lg text-sm uppercase tracking-wider transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer";
+}
+
+function enviarDorsal() {
+    if (!numeroSeleccionado) return;
+
+    const btnConfirmar = document.getElementById('btnConfirmar');
+    btnConfirmar.disabled = true;
+    btnConfirmar.innerText = "ASIGNANDO SUPERLICENCIA...";
+
+    let formData = new FormData();
+    formData.append('partidaId', '{{ partidaId }}');
+    formData.append('numero', numeroSeleccionado);
+
+    fetch('/api/career/save-number', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // El proceso ha terminado con total éxito. Mandamos al jugador al paddock oficial del juego
+            window.location.href = "/dashboard";
+        } else {
+            alert("RECHAZADO POR COMISARIOS: " + data.message);
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerText = "CONFIRMAR E INICIAR TRAYECTORIA";
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Pérdida de telemetría de red con la base de datos.");
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerText = "CONFIRMAR E INICIAR TRAYECTORIA";
+    });
+}
+</script>
+{% endblock %}

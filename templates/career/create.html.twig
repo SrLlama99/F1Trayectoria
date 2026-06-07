@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}F1 TRAYECTORIA - NUEVA LICENCIA DE PILOTO{% endblock %}
+
+{% block body %}
+	<div class="relative min-h-screen flex items-center justify-center overflow-hidden p-4">
+		<div class="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,24,38,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.4)_1px,transparent_1px)] bg-[size:30px_30px]"></div>
+		<div class="absolute -top-40 -right-40 w-96 h-96 bg-red-600/10 rounded-full blur-[120px] z-0"></div>
+
+		<div class="relative w-full max-w-xl bg-slate-950/90 border border-slate-800 border-t-4 border-t-red-600 p-8 rounded-b-xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-md z-10">
+			<div class="absolute top-2 left-4 text-[10px] font-racing text-slate-500 tracking-widest">FIA PROTOCOL // SLOT_0{{ slotNumero }}</div>
+			<div class="absolute top-2 right-4 text-[10px] font-racing text-red-500 tracking-widest animate-pulse">● CREANDO PILOTO</div>
+
+			<div class="mb-8 border-b border-slate-900 pb-4">
+				<h1 class="font-racing text-2xl font-black text-white tracking-wide uppercase italic">
+					Registro de <span class="text-red-500">Superlicencia</span>
+				</h1>
+				<p class="text-xs text-slate-400 mt-1">Configura la identidad del piloto para iniciar tu trayectoria profesional desde el circuito base.</p>
+			</div>
+
+			<div id="setup-alert" class="hidden mb-6 p-3 bg-red-950/40 border border-red-500 text-red-400 text-xs font-racing uppercase tracking-wider text-center rounded"></div>
+
+			<form id="setup-driver-form" class="space-y-5">
+				<input type="hidden" name="slotNumero" value="{{ slotNumero }}">
+
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<div>
+						<label class="block text-xs font-racing uppercase tracking-widest text-slate-400 mb-1">Nombre</label>
+						<input type="text" name="nombre" required autocomplete="off" max="30" class="w-full bg-slate-900/80 border border-slate-700 focus:border-cyan-400 px-4 py-2 text-white placeholder-slate-600 focus:outline-none transition-colors rounded-sm font-semibold">
+					</div>
+					<div>
+						<label class="block text-xs font-racing uppercase tracking-widest text-slate-400 mb-1">Apellido</label>
+						<input type="text" name="apellido" required autocomplete="off" max="30" class="w-full bg-slate-900/80 border border-slate-700 focus:border-cyan-400 px-4 py-2 text-white placeholder-slate-600 focus:outline-none transition-colors rounded-sm font-semibold">
+					</div>
+				</div>
+
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+					<div class="sm:col-span-1">
+						<label class="block text-xs font-racing uppercase tracking-widest text-slate-400 mb-1">Abreviatura</label>
+						<input type="text" name="abreviatura" required autocomplete="off" maxlength="3" minlength="3" placeholder="LLM" class="w-full bg-slate-900/80 border border-slate-700 focus:border-cyan-400 px-4 py-2 text-white placeholder-slate-600 focus:outline-none transition-colors rounded-sm font-bold uppercase text-center tracking-widest">
+					</div>
+					<div class="sm:col-span-2">
+						<label class="block text-xs font-racing uppercase tracking-widest text-slate-400 mb-1">País de Licencia</label>
+						<select name="pais" required class="w-full bg-slate-900/80 border border-slate-700 focus:border-cyan-400 px-4 py-2 text-white focus:outline-none transition-colors rounded-sm font-medium h-[42px]">
+							<option value="" disabled selected class="text-slate-600">Selecciona procedencia...</option>
+							{% for pais in paises %}
+								<option value="{{ pais.codigoIso }}">{{ pais.nombrePais }}</option>
+							{% else %}
+								<option value="" disabled class="text-red-500">No hay países cargados en la central de telemetría</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+
+				<div class="border-t border-slate-900 pt-6 flex flex-col sm:flex-row-reverse gap-3">
+					<button type="submit" class="w-full sm:w-auto flex-1 bg-red-600 hover:bg-red-700 text-white font-racing font-bold uppercase py-3 px-6 tracking-wider text-sm transition-all rounded shadow-[0_4px_15px_rgba(220,38,38,0.3)]">
+						Firmar Licencia
+					</button>
+					<a href="{{ path('app_dashboard') }}" class="w-full sm:w-auto text-center border border-slate-800 hover:bg-slate-900 text-slate-400 hover:text-white font-racing uppercase py-3 px-6 tracking-wider text-xs transition-colors rounded flex items-center justify-center">
+						Abortar Registro
+					</a>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script>
+		const form = document.getElementById('setup-driver-form');
+		const alertBox = document.getElementById('setup-alert');
+
+		form.addEventListener('submit', function (e) {
+			e.preventDefault();
+			const formData = new FormData(form);
+			alertBox.classList.add('hidden');
+
+			fetch("{{ path('api_career_setup') }}", {
+				method: 'POST',
+				body: formData
+			}).then(response => response.json()).then(data => {
+				if (data.success) {
+					alertBox.textContent = data.message;
+					alertBox.classList.remove('hidden', 'bg-red-950/40', 'border-red-500', 'text-red-400');
+					alertBox.classList.add('bg-emerald-950/50', 'border-emerald-500', 'text-emerald-400');
+
+					setTimeout(() => {
+						window.location.href = "/career/generation-loading/" + data.partidaId;
+					}, 1500);
+				} else {
+					alertBox.textContent = "ERROR: " + data.message;
+					alertBox.classList.remove('hidden');
+				}
+			}).catch(error => {
+				alertBox.textContent = "CONEXIÓN CAÍDA CON EL CENTRO DE CONTROL DE LA FIA";
+				alertBox.classList.remove('hidden');
+			});
+		});
+	</script>
+{% endblock %}

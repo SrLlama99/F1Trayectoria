@@ -1,0 +1,213 @@
+{% extends 'base.html.twig' %}
+{% set partidaId = partida.idPartida %}
+{% block title %}FIA OFFICIAL DATA - CLASIFICACIONES{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-6xl mx-auto space-y-6">
+
+			<header class="bg-slate-900/40 border border-slate-900 p-6 rounded-2xl backdrop-blur-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+				<div class="flex items-center gap-3">
+					<span class="text-3xl p-2 bg-slate-950 rounded-xl border border-slate-800 shadow-inner">📊</span>
+					<div>
+						<span class="text-cyan-500 font-racing text-[10px] tracking-widest block uppercase">FIA OFFICIAL LIVE DATA // SECCIÓN CLASIFICACIONES</span>
+						<h1 class="text-2xl font-black font-racing uppercase tracking-wide">Clasificaciones del <span class="text-cyan-400">Campeonato</span></h1>
+					</div>
+				</div>
+
+				<form method="GET" action="{{ path('app_clasificaciones', {'idPartida': partida.idPartida}) }}" class="flex flex-wrap items-center gap-3 font-mono text-xs w-full md:w-auto">
+					
+					<div class="flex flex-col gap-1 flex-1 sm:flex-none">
+						<label class="text-[9px] text-slate-500 font-racing uppercase tracking-wider">Temporada</label>
+						<select name="temporada" onchange="this.form.submit()" class="bg-slate-950 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl focus:ring-1 focus:ring-cyan-500 focus:outline-none min-w-[140px]">
+							<option value="actual" {{ app.request.get('temporada') == 'actual' or not app.request.get('temporada') ? 'selected' : '' }}>⚡ Actual ({{ anoActual }})</option>
+							{% for temp in temporadasPasadas %}
+								<option value="{{ temp.id }}" {{ app.request.get('temporada') == temp.id ? 'selected' : '' }}>⏳ Año {{ temp.anyo }}</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<div class="flex flex-col gap-1 flex-1 sm:flex-none">
+						<label class="text-[9px] text-slate-500 font-racing uppercase tracking-wider">Categoría</label>
+						<select name="categoria" onchange="this.form.submit()" class="bg-slate-950 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl focus:ring-1 focus:ring-cyan-500 focus:outline-none min-w-[130px]">
+							<option value="KARTING" {{ app.request.get('categoria') == 'KARTING' ? 'selected' : '' }}>🛹 Karting</option>
+							<option value="F3" {{ app.request.get('categoria') == 'F3' ? 'selected' : '' }}>🟢 Fórmula 3</option>
+							<option value="F2" {{ app.request.get('categoria') == 'F2' ? 'selected' : '' }}>🔵 Fórmula 2</option>
+							<option value="F1" {{ app.request.get('categoria') == 'F1' ? 'selected' : '' }}>🔴 Fórmula 1</option>
+						</select>
+					</div>
+				</form>
+			</header>
+
+			<div class="flex border-b border-slate-900 font-racing text-xs tracking-wider uppercase">
+				<button onclick="cambiarTab('tab-pilotos', this)" class="btn-tab px-6 py-3 border-b-2 border-cyan-500 text-cyan-400 font-black transition-all bg-slate-900/20 rounded-t-xl">
+					👤 Mundial de Pilotos
+				</button>
+				<button onclick="cambiarTab('tab-escuderias', this)" class="btn-tab px-6 py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all">
+					🛡️ Campeonato de Constructores
+				</button>
+			</div>
+
+			<div id="contenedor-tablas" class="space-y-6">
+
+				<div id="tab-pilotos" class="tab-contenido block bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+					<div class="p-4 bg-slate-950/40 border-b border-slate-900 flex justify-between items-center">
+						<span class="text-[10px] font-mono text-slate-400 tracking-widest uppercase">Parrilla Global Computada</span>
+						<span class="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded font-mono text-[10px]">Puntos Oficiales</span>
+					</div>
+
+					<div class="overflow-x-auto">
+						<table class="w-full font-mono text-xs text-left border-collapse">
+							<thead>
+								<tr class="bg-slate-950/60 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-900">
+									<th class="py-3.5 px-4 text-center w-16">Pos</th>
+									<th class="py-3.5 px-4">Piloto</th>
+									<th class="py-3.5 px-4 hidden sm:table-cell">Escudería</th>
+									<th class="py-3.5 px-4 text-center w-24">Victorias</th>
+									<th class="py-3.5 px-4 text-center w-24">Podios</th>
+									<th class="py-3.5 px-4 text-right pr-6 w-28">PTS</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-slate-900/40">
+								{% for fila in clasificacionPilotos %}
+									<tr class="transition-all group {% if fila.isHumano %} bg-cyan-500/10 border-cyan-500 text-white font-bold shadow-[0_0_15px_rgba(6,182,212,0.1)] {% else %} hover:bg-slate-850/20 {% endif %}">
+										
+										<td class="py-4 px-4 text-center font-bold">
+											{% if loop.index == 1 %}
+												<span class="bg-yellow-500 text-slate-950 px-2 py-0.5 rounded font-black shadow-lg shadow-yellow-500/10">1</span>
+											{% elseif loop.index == 2 %}
+												<span class="bg-slate-300 text-slate-950 px-2 py-0.5 rounded font-black shadow-lg shadow-slate-300/10">2</span>
+											{% elseif loop.index == 3 %}
+												<span class="bg-amber-700 text-white px-2 py-0.5 rounded font-black shadow-lg shadow-amber-700/10">3</span>
+											{% else %}
+												<span class="text-slate-400">{{ loop.index }}</span>
+											{% endif %}
+										</td>
+
+										<td class="py-4 px-4 font-sans font-bold text-slate-200 group-hover:text-white transition-colors">
+											<div class="flex items-center gap-2">
+												<span class="{{ fila.isHumano ? 'text-cyan-400 font-extrabold' : '' }}">
+													{{ fila.piloto.nombre }}
+												</span>
+												{% if fila.isHumano %}
+													<span class="bg-cyan-500 text-slate-950 font-mono text-[9px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider animate-pulse">TÚ</span>
+												{% endif %}
+											</div>
+											<span class="block sm:hidden text-[10px] font-mono text-slate-500 mt-0.5">{{ fila.escuderia.nombre }}</span>
+										</td>
+
+										<td class="py-4 px-4 text-slate-400 hidden sm:table-cell font-sans">
+											{{ fila.escuderia.nombre }}
+										</td>
+
+										<td class="py-4 px-4 text-center text-slate-300 font-mono">
+											{{ fila.victorias }}
+										</td>
+
+										<td class="py-4 px-4 text-center text-slate-300 font-mono">
+											{{ fila.podios }}
+										</td>
+
+										<td class="py-4 px-4 text-right pr-6 font-black text-sm {{ fila.isHumano ? 'text-cyan-400' : 'text-slate-200' }}">
+											{{ fila.puntos|number_format(0, ',', '.') }}
+										</td>
+									</tr>
+								{% else %}
+									<tr>
+										<td colspan="6" class="text-center py-10 text-slate-500 italic font-sans">
+											No se registran datos de telemetría o carreras finalizadas para esta combinación de filtros.
+										</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				<div id="tab-escuderias" class="tab-contenido hidden bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+					<div class="p-4 bg-slate-950/40 border-b border-slate-900 flex justify-between items-center">
+						<span class="text-[10px] font-mono text-slate-400 tracking-widest uppercase">Estructura Corporativa y de Constructores</span>
+						<span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono text-[10px]">Puntos Mundiales</span>
+					</div>
+
+					<div class="overflow-x-auto">
+						<table class="w-full font-mono text-xs text-left border-collapse">
+							<thead>
+								<tr class="bg-slate-950/60 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-900">
+									<th class="py-3.5 px-4 text-center w-16">Pos</th>
+									<th class="py-3.5 px-4">Escudería</th>
+									<th class="py-3.5 px-4 hidden sm:table-cell">Director del Equipo</th>
+									<th class="py-3.5 px-4 text-right pr-6 w-36">PTS acumulados</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-slate-900/40">
+								{% for fila in clasificacionEscuderias %}
+									<tr class="hover:bg-slate-850/20 transition-colors group">
+										<td class="py-4 px-4 text-center font-bold">
+											{% if loop.index == 1 %}
+												<span class="bg-yellow-500 text-slate-950 px-2 py-0.5 rounded font-black">1</span>
+											{% elseif loop.index == 2 %}
+												<span class="bg-slate-300 text-slate-950 px-2 py-0.5 rounded font-black">2</span>
+											{% elseif loop.index == 3 %}
+												<span class="bg-amber-700 text-white px-2 py-0.5 rounded font-black">3</span>
+											{% else %}
+												<span class="text-slate-400">{{ loop.index }}</span>
+											{% endif %}
+										</td>
+
+										<td class="py-4 px-4 font-sans font-bold text-slate-200 group-hover:text-white transition-colors">
+											{{ fila.escuderia.nombre }}
+											<span class="block sm:hidden text-[10px] font-mono text-slate-500 mt-0.5">Jefe: {{ fila.escuderia.jefeEquipo|default('N/A') }}</span>
+										</td>
+
+										<td class="py-4 px-4 text-slate-400 hidden sm:table-cell font-sans">
+											{{ fila.escuderia.jefeEquipo|default('N/A') }}
+										</td>
+
+										<td class="py-4 px-4 text-right pr-6 font-black text-sm text-emerald-400">
+											{{ fila.puntos|number_format(0, ',', '.') }}
+										</td>
+									</tr>
+								{% else %}
+									<tr>
+										<td colspan="4" class="text-center py-10 text-slate-500 italic font-sans">
+											No hay registros de constructores o carreras calculadas en este periodo.
+										</td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function cambiarTab(tabId, botonActivo) {
+			document.querySelectorAll('.tab-contenido').forEach(tab => {
+				tab.classList.add('hidden');
+				tab.classList.remove('block');
+			});
+
+			document.querySelectorAll('.btn-tab').forEach(btn => {
+				btn.classList.remove('border-cyan-500', 'text-cyan-400', 'border-emerald-500', 'text-emerald-400', 'font-black', 'bg-slate-900/20', 'rounded-t-xl');
+				btn.classList.add('border-transparent', 'text-slate-400');
+			});
+
+			const panelActivo = document.getElementById(tabId);
+			panelActivo.classList.remove('hidden');
+			panelActivo.classList.add('block');
+
+			botonActivo.classList.remove('border-transparent', 'text-slate-400');
+			
+			// Color personalizado según la pestaña seleccionada
+			if(tabId === 'tab-pilotos') {
+				botonActivo.classList.add('border-cyan-500', 'text-cyan-400', 'font-black', 'bg-slate-900/20', 'rounded-t-xl');
+			} else {
+				botonActivo.classList.add('border-emerald-500', 'text-emerald-400', 'font-black', 'bg-slate-900/20', 'rounded-t-xl');
+			}
+		}
+	</script>
+{% endblock %}

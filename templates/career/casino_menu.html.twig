@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% set partidaId = partida.idPartida %}
+
+{% block title %}FIA CENTRAL - CASINO ROYAL{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-7xl mx-auto space-y-6">
+
+			<!-- CABECERA DEL CASINO -->
+			<header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-gradient-to-r from-slate-900 via-amber-950/20 to-slate-900 border border-amber-500/20 p-5 rounded-xl backdrop-blur-sm gap-4">
+				<div>
+					<span class="text-amber-500 font-racing text-xs tracking-widest block uppercase">Zona de Ocio // Altas Apuestas</span>
+					<h1 class="text-2xl font-black font-racing uppercase italic mt-0.5 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200">
+						🎰 CASINO <span class="text-white italic">ROYAL</span>
+					</h1>
+				</div>
+
+				<!-- CONTROL DE JUGADAS SEMANALES Y BALANCE -->
+				<div class="flex items-center gap-4 font-mono text-xs w-full md:w-auto justify-end">
+					<div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2.5 px-4 text-right">
+						<span class="text-slate-500 block text-[9px] font-racing uppercase">LÍMITE SEMANAL</span>
+						<span class="font-bold text-sm {% if jugadasRestantes == 0 %}text-rose-500 animate-pulse{% else %}text-amber-400{% endif %}">
+							{{ jugadasRestantes }} / {{ totalJugadasPermitidas }}
+						</span>
+						<span class="text-[9px] text-slate-500 block">intentos libres</span>
+					</div>
+					
+					<div class="bg-slate-950/80 border border-amber-500/20 rounded-lg p-2.5 px-4 text-right">
+						<span class="text-amber-500 block text-[9px] font-racing uppercase">TU CARTERA</span>
+						<span class="text-emerald-400 font-bold text-sm tracking-wide">
+							€ {{ piloto.dinero|number_format(0, ',', '.') }}
+						</span>
+					</div>
+				</div>
+			</header>
+
+			<!-- ALERTA SI NO QUEDAN JUGADAS -->
+			{% if jugadasRestantes == 0 %}
+				<div class="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 text-center text-sm font-racing uppercase tracking-wider text-rose-400 animate-pulse">
+					🛑 Has agotado tus tiradas permitidas por esta semana. Regresa tras el próximo Gran Premio.
+				</div>
+			{% endif %}
+
+			<!-- MENÚ DE JUEGOS DISPONIBLES -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+				<!-- JUEGO 1: BLACKJACK -->
+				<div class="group bg-slate-900 border border-slate-800 hover:border-amber-500/40 p-6 rounded-xl shadow-lg transition-all relative overflow-hidden flex flex-col justify-between">
+					<div class="absolute -right-8 -bottom-8 text-slate-800/10 text-8xl font-black font-racing italic select-none group-hover:text-amber-500/5 transition-colors">21</div>
+					<div>
+						<div class="flex justify-between items-start mb-4">
+							<span class="text-2xl p-2 bg-slate-950 rounded-lg border border-slate-800 group-hover:border-amber-500/30 transition-colors">🃏</span>
+							<span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 uppercase font-bold">Retorno Alto</span>
+						</div>
+						<h3 class="font-racing text-xl font-black text-white uppercase tracking-wide group-hover:text-amber-400 transition-colors">Blackjack 21</h3>
+						<p class="text-xs text-slate-400 font-mono mt-2 leading-relaxed">
+							Enfréntate a la banca en la mesa de cartas. Consigue acercarte al número 21 sin pasarte para duplicar tu apuesta. Requiere estrategia.
+						</p>
+					</div>
+					<div class="mt-6">
+						<a href="{{ jugadasRestantes > 0 ? '/career/casino/' ~ partidaId ~ '/blackjack' : '#' }}" 
+						   class="w-full text-center font-racing text-xs font-bold tracking-widest uppercase py-3 rounded-lg block transition-all
+						          {{ jugadasRestantes > 0 ? 'bg-slate-950 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-slate-800 hover:border-amber-400 shadow-md' : 'bg-slate-900 border border-slate-950 text-slate-600 cursor-not-allowed' }}">
+							♠️ JUGAR BLACKJACK
+						</a>
+					</div>
+				</div>
+
+				<!-- JUEGO 2: DADOS -->
+				<div class="group bg-slate-900 border border-slate-800 hover:border-amber-500/40 p-6 rounded-xl shadow-lg transition-all relative overflow-hidden flex flex-col justify-between">
+					<div class="absolute -right-8 -bottom-8 text-slate-800/10 text-8xl font-black font-racing italic select-none group-hover:text-amber-500/5 transition-colors">DICE</div>
+					<div>
+						<div class="flex justify-between items-start mb-4">
+							<span class="text-2xl p-2 bg-slate-950 rounded-lg border border-slate-800 group-hover:border-amber-500/30 transition-colors">🎲</span>
+							<span class="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 uppercase font-bold">Rápido</span>
+						</div>
+						<h3 class="font-racing text-xl font-black text-white uppercase tracking-wide group-hover:text-amber-400 transition-colors">Craps (Dados)</h3>
+						<p class="text-xs text-slate-400 font-mono mt-2 leading-relaxed">
+							Lanza los dados sobre el tapete verde. Apuesta al resultado de la suma total. Ideal para los pilotos que confían en su suerte pura.
+						</p>
+					</div>
+					<div class="mt-6">
+						<a href="{{ jugadasRestantes > 0 ? '/career/casino/' ~ partidaId ~ '/dados' : '#' }}" 
+						   class="w-full text-center font-racing text-xs font-bold tracking-widest uppercase py-3 rounded-lg block transition-all
+						          {{ jugadasRestantes > 0 ? 'bg-slate-950 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-slate-800 hover:border-amber-400 shadow-md' : 'bg-slate-900 border border-slate-950 text-slate-600 cursor-not-allowed' }}">
+							🎲 LANZAR DADOS
+						</a>
+					</div>
+				</div>
+
+				<!-- JUEGO 3: RULETA -->
+				<div class="group bg-slate-900 border border-slate-800 hover:border-amber-500/40 p-6 rounded-xl shadow-lg transition-all relative overflow-hidden flex flex-col justify-between">
+					<div class="absolute -right-8 -bottom-8 text-slate-800/10 text-8xl font-black font-racing italic select-none group-hover:text-amber-500/5 transition-colors">00</div>
+					<div>
+						<div class="flex justify-between items-start mb-4">
+							<span class="text-2xl p-2 bg-slate-950 rounded-lg border border-slate-800 group-hover:border-amber-500/30 transition-colors">🎡</span>
+							<span class="text-[10px] font-mono text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20 uppercase font-bold">Clásico</span>
+						</div>
+						<h3 class="font-racing text-xl font-black text-white uppercase tracking-wide group-hover:text-amber-400 transition-colors">Ruleta Europea</h3>
+						<p class="text-xs text-slate-400 font-mono mt-2 leading-relaxed">
+							Rojo, negro, par, impar o a un número completo. Haz girar la mítica ruleta del casino y multiplica exponencialmente tu capital.
+						</p>
+					</div>
+					<div class="mt-6">
+						<a href="{{ jugadasRestantes > 0 ? '/career/casino/' ~ partidaId ~ '/ruleta' : '#' }}" 
+						   class="w-full text-center font-racing text-xs font-bold tracking-widest uppercase py-3 rounded-lg block transition-all
+						          {{ jugadasRestantes > 0 ? 'bg-slate-950 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-slate-800 hover:border-amber-400 shadow-md' : 'bg-slate-900 border border-slate-950 text-slate-600 cursor-not-allowed' }}">
+							🎡 GIRAR RULETA
+						</a>
+					</div>
+				</div>
+
+				<!-- JUEGO 4: TRAGAPERRAS -->
+				<div class="group bg-slate-900 border border-slate-800 hover:border-amber-500/40 p-6 rounded-xl shadow-lg transition-all relative overflow-hidden flex flex-col justify-between">
+					<div class="absolute -right-8 -bottom-8 text-slate-800/10 text-8xl font-black font-racing italic select-none group-hover:text-amber-500/5 transition-colors">JACK</div>
+					<div>
+						<div class="flex justify-between items-start mb-4">
+							<span class="text-2xl p-2 bg-slate-950 rounded-lg border border-slate-800 group-hover:border-amber-500/30 transition-colors">🍒</span>
+							<span class="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 uppercase font-bold">Gran Bote</span>
+						</div>
+						<h3 class="font-racing text-xl font-black text-white uppercase tracking-wide group-hover:text-amber-400 transition-colors">Tragaperras Turbo</h3>
+						<p class="text-xs text-slate-400 font-mono mt-2 leading-relaxed">
+							Alinea los símbolos de bólidos, neumáticos y diamantes. Activa multiplicadores mecánicos y llévate el premio acumulado de la semana.
+						</p>
+					</div>
+					<div class="mt-6">
+						<a href="{{ jugadasRestantes > 0 ? '/career/casino/' ~ partidaId ~ '/tragaperras' : '#' }}" 
+						   class="w-full text-center font-racing text-xs font-bold tracking-widest uppercase py-3 rounded-lg block transition-all
+						          {{ jugadasRestantes > 0 ? 'bg-slate-950 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-slate-800 hover:border-amber-400 shadow-md' : 'bg-slate-900 border border-slate-950 text-slate-600 cursor-not-allowed' }}">
+							🍒 TIRAR DE LA PALANCA
+						</a>
+					</div>
+				</div>
+
+			</div>
+
+			<!-- BOTÓN RETORNO -->
+			<div class="pt-2">
+				<a href="/career/vida/{{ partida.idPartida }}" class="w-full text-center font-racing text-xs font-bold tracking-widest uppercase bg-slate-900 hover:bg-slate-850 text-slate-400 border border-slate-800 py-2.5 rounded-lg transition-colors block">
+					← VOLVER A ESTILO DE VIDA
+				</a>
+			</div>
+
+		</div>
+	</div>
+{% endblock %}
