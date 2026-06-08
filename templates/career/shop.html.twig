@@ -1,94 +1,140 @@
 {% extends 'base.html.twig' %}
 {% set partidaId = partida.idPartida %}
-{% block title %}FIA PADDOCK - BOUTIQUE DE LUJO
-{% endblock %}
+{% block title %}FIA PADDOCK - BOUTIQUE DE LUJO{% endblock %}
 
 {% block body %}
 	<div class="relative min-h-screen flex flex-col bg-slate-950 text-white p-6">
-		<div class="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,24,38,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.2)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+		<div class="absolute inset-0 z-0 bg-[linear-gradient(rgba(18,24,38,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.2)_1px,transparent_1px)] bg-[size:40px_40px]\"></div>
 
 		<div class="relative z-10 w-full max-w-6xl mx-auto flex flex-col flex-grow">
+			
 			<header class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-5 mb-6 gap-4">
 				<div>
 					<span class="text-emerald-400 font-bold tracking-widest text-xs uppercase px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20">Finanzas Personales</span>
 					<h1 class="text-3xl font-extrabold tracking-tight mt-1 text-slate-100 uppercase">TIENDA EXCLUSIVA DE ESTILO DE VIDA</h1>
-					<p class="text-xs text-slate-400 mt-0.5">Invierte tu salario de escudería para mejorar tu prestigio social fuera de los circuitos.</p>
+					<p class="text-xs text-slate-400 mt-0.5">Invierte tus ganancias en bienes de prestigio para aumentar tu impacto mediático.</p>
 				</div>
-
-				<div class="bg-slate-900 border border-slate-800 p-3 rounded-lg flex items-center gap-6 shadow-xl font-mono">
-					<div>
-						<span class="text-[10px] text-slate-500 block uppercase font-sans font-bold">Saldo Disponible</span>
-						<span id="headerDinero" class="text-xl font-black text-emerald-400">€
-							{{ piloto.dinero|number_format(0, ',', '.') }}</span>
+				
+				<div class="flex flex-wrap items-center gap-3 bg-slate-900/50 p-2.5 rounded-xl border border-slate-850 backdrop-blur-sm">
+					<div class="text-xs font-mono px-3 py-1.5 bg-slate-950 border border-slate-850 rounded-lg">
+						<span class="text-slate-500 font-bold">FONDOS:</span>
+						<span id="headerDinero" class="text-emerald-400 font-black ml-1">{{ piloto.dinero|number_format(0, ',', '.') }} €</span>
 					</div>
-					<div class="border-l border-slate-800 pl-6">
-						<span class="text-[10px] text-slate-500 block uppercase font-sans font-bold">Nivel de Vida Actual</span>
-						<span id="headerEstilo" class="text-lg font-black text-indigo-400">{{ piloto.estiloDeVida }}
-							/ 100</span>
+					<div class="text-xs font-mono px-3 py-1.5 bg-slate-950 border border-slate-850 rounded-lg">
+						<span class="text-slate-500 font-bold">ESTILO:</span>
+						<span id="headerEstilo" class="text-cyan-400 font-black ml-1">{{ piloto.estiloDeVida }} / 100</span>
 					</div>
 				</div>
 			</header>
 
-			<div class="flex space-x-2 mb-6 border-b border-slate-900 pb-3">
-				<button onclick="switchTab('OBJETOS')" id="tabBtn-OBJETOS" class="tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-cyan-500 text-slate-950 border-cyan-400">
-					📦 Objetos Básicos
-				</button>
-				<button onclick="switchTab('VEHICULOS')" id="tabBtn-VEHICULOS" class="tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-slate-900 text-slate-400 border-slate-800 hover:text-white">
-					🏎️ Vehículos / Motor
-				</button>
-				<button onclick="switchTab('PROPIEDADES')" id="tabBtn-PROPIEDADES" class="tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-slate-900 text-slate-400 border-slate-800 hover:text-white">
-					🏢 Propiedades Residenciales
-				</button>
+			{% set categoriaActual = app.request.query.get('categoria') %}
+			<div class="flex flex-wrap gap-2 border-b border-slate-900 pb-4 mb-6">
+				<a href="{{ path('app_career_shop', { 'partidaId': partida.idPartida }) }}" 
+				   class="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg border {% if categoriaActual is empty %} bg-emerald-500 text-slate-950 border-emerald-500 {% else %} bg-slate-900/60 border-slate-850 text-slate-400 hover:text-white {% endif %} transition-all">
+					Todo
+				</a>
+				<a href="{{ path('app_career_shop', { 'partidaId': partida.idPartida }) }}?categoria=OBJETOS" 
+				   class="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg border {% if categoriaActual == 'OBJETOS' %} bg-emerald-500 text-slate-950 border-emerald-500 {% else %} bg-slate-900/60 border-slate-850 text-slate-400 hover:text-white {% endif %} transition-all">
+					Objetos
+				</a>
+				<a href="{{ path('app_career_shop', { 'partidaId': partida.idPartida }) }}?categoria=VEHICULOS" 
+				   class="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg border {% if categoriaActual == 'VEHICULOS' %} bg-emerald-500 text-slate-950 border-emerald-500 {% else %} bg-slate-900/60 border-slate-850 text-slate-400 hover:text-white {% endif %} transition-all">
+					Vehículos
+				</a>
+				<a href="{{ path('app_career_shop', { 'partidaId': partida.idPartida }) }}?categoria=PROPIEDADES" 
+				   class="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg border {% if categoriaActual == 'PROPIEDADES' %} bg-emerald-500 text-slate-950 border-emerald-500 {% else %} bg-slate-900/60 border-slate-850 text-slate-400 hover:text-white {% endif %} transition-all">
+					Propiedades
+				</a>
 			</div>
 
-			{% for categoria, itemsList in tienda %}
-				<div id="tabContent-{{ categoria }}" class="tab-content grid grid-cols-1 md:grid-cols-3 gap-6 {% if categoria != 'OBJETOS' %}hidden{% endif %}">
-					{% for itemData in itemsList %}
-						{% set item = itemData.entity %}
-						<div class="bg-slate-900/80 border {% if itemData.comprado %}border-emerald-500/20 opacity-75{% else %}border-slate-800 hover:border-cyan-500/30{% endif %} rounded-xl p-5 flex flex-col justify-between shadow-lg backdrop-blur-sm relative transition-all">
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				{% set hayItems = false %}
+				{% for item in items %}
+					{% if categoriaActual is empty or item.categoria == categoriaActual %}
+						{% set hayItems = true %}
+						
+						{% set propiedad = (comprasMapeadas is defined and comprasMapeadas[item.id] is defined) ? comprasMapeadas[item.id] : null %}
+						{% set esComprado = propiedad is not null %}
+						{% set desgaste = esComprado ? propiedad.desgaste : 0 %}
 
-							<div>
-								<div class="flex justify-between items-start mb-3">
-									<span class="text-3xl p-2 bg-slate-950 rounded-lg border border-slate-800/60">{{ item.emoji }}</span>
-									<span class="text-[10px] font-black tracking-wide text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded">
-										+{{ item.bonoEstiloDeVida }}
-										ESTILO DE VIDA
-									</span>
+						<div class="relative bg-slate-900/40 border {{ esComprado ? (desgaste >= 80 ? 'border-rose-500/40' : 'border-slate-900') : 'border-slate-900' }} p-6 rounded-2xl backdrop-blur-sm flex flex-col justify-between hover:border-slate-800 transition-all group shadow-xl">
+							
+							<div class="flex justify-between items-start mb-4">
+								<div class="text-3xl bg-slate-950 p-3 rounded-xl border border-slate-850 group-hover:scale-110 transition-transform shadow-inner">
+									{{ item.emoji }}
 								</div>
-
-								<h3 class="text-lg font-bold text-slate-100 uppercase tracking-wide mt-1">{{ item.nombre }}</h3>
-								<p class="text-xs text-slate-400 mt-1.5 leading-relaxed">{{ item.descripcion }}</p>
+								<div class="text-right">
+									<span class="text-[9px] text-slate-500 font-bold block uppercase tracking-widest font-mono">{{ item.categoria }}</span>
+									<div class="text-lg font-black {{ esComprado ? 'text-slate-500' : 'text-emerald-400' }} mt-0.5 tracking-tight">
+										{{ item.precio|number_format(0, ',', '.') }} €
+									</div>
+								</div>
 							</div>
 
-							<div class="mt-6 pt-4 border-t border-slate-950 flex items-center justify-between gap-3">
-								<div>
-									<span class="text-[9px] text-slate-500 block uppercase font-bold">Valor de Mercado</span>
-									<span class="text-base font-mono font-black text-slate-200">{{ item.precio|number_format(0, ',', '.') }}€</span>
+							<div class="mb-5">
+								<h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-100">{{ item.nombre }}</h3>
+								<p class="text-xs text-slate-400 leading-relaxed mt-1.5 min-h-[40px]">{{ item.descripcion }}</p>
+								
+								<div class="inline-flex items-center gap-1.5 mt-3 text-[10px] font-bold text-emerald-400 bg-emerald-500/5 px-2.5 py-1 rounded-md border border-emerald-500/10">
+									⚡ +{{ item.bonoEstiloDeVida }} Estilo de Vida
 								</div>
+							</div>
 
-								{% if itemData.comprado %}
-									<button disabled class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold px-4 py-2 rounded text-xs uppercase tracking-wider cursor-not-allowed">
-										✓ Adquirido
-									</button>
+							<div class="mt-auto pt-4 border-t border-slate-900/60 font-mono">
+								{% if esComprado %}
+									<div class="mb-3">
+										<div class="flex justify-between text-[9px] mb-1 tracking-tight">
+											<span class="{{ desgaste >= 80 ? 'text-rose-400 font-bold animate-pulse' : 'text-slate-500' }}">
+												{{ desgaste >= 80 ? '⚠️ CONDICIÓN CRÍTICA' : 'INTEGRIDAD DEL BIEN' }}
+											</span>
+											<span class="font-bold text-slate-300">{{ 100 - desgaste }}%</span>
+										</div>
+										<div class="w-full bg-slate-950 h-1 rounded-full overflow-hidden border border-slate-850">
+											<div class="h-full transition-all duration-500 {{ desgaste >= 80 ? 'bg-rose-500' : (desgaste >= 45 ? 'bg-amber-500' : 'bg-emerald-500') }}" 
+												 style="width: {{ 100 - desgaste }}%"></div>
+										</div>
+									</div>
+
+									{% if desgaste > 0 %}
+										{% set factor = desgaste / 100 %}
+										{% set costeEstimado = ((item.precio * 0.5) * (factor * factor) + (desgaste * 5))|round(0, 'floor') %}
+										{% if costeEstimado < 10 %}{% set costeEstimado = 10 %}{% endif %}
+
+										<button id="btnBuy-{{ item.id }}" 
+												onclick="ejecutarReparacion({{ item.id }}, {{ costeEstimado }})"
+												class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer transition-all shadow-lg shadow-amber-500/5">
+											⚙️ Reparar ({{ costeEstimado }} €)
+										</button>
+									{% else %}
+										<button class="w-full bg-slate-950 border border-slate-850 text-slate-600 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider cursor-not-allowed">
+											✓ Adquirido
+										</button>
+									{% endif %}
 								{% else %}
-									<button id="btnBuy-{{ item.id }}" onclick="abrirModalCompra({{ item.id }}, '{{ item.nombre|e('js') }}', {{ item.precio }}, '{{ item.emoji|e('js') }}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded text-xs uppercase tracking-wider transition-all">
+									<button id="btnBuy-{{ item.id }}" 
+											onclick="abrirModalCompra({{ item.id }}, '{{ item.nombre|e('js') }}', {{ item.precio }}, '{{ item.emoji|e('js') }}')"
+											class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider cursor-pointer transition-all shadow-lg shadow-emerald-500/10">
 										Comprar
 									</button>
 								{% endif %}
 							</div>
+
 						</div>
-					{% else %}
-						<div class="col-span-3 text-center py-12 border border-dashed border-slate-900 rounded-xl text-slate-500 font-racing text-sm">
-							No hay artículos de lujo listados en esta sección regulatoria.
-						</div>
-					{% endfor %}
-				</div>
-			{% endfor %}
+					{% endif %}
+				{% endfor %}
+
+				{% if not hayItems %}
+					<div class="col-span-full border border-dashed border-slate-900 p-12 rounded-2xl text-center text-xs text-slate-500 uppercase tracking-wider">
+						📦 No hay artículos catalogados en esta sección.
+					</div>
+				{% endif %}
+			</div>
+
 		</div>
 	</div>
+
 	<div id="modal-confirmar-compra" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
 		<div class="relative w-full max-w-md bg-slate-900 border border-slate-800 border-t-4 border-t-emerald-500 p-6 rounded-xl shadow-2xl font-mono text-white">
-
 			<header class="flex justify-between items-start mb-4">
 				<div>
 					<span class="text-[9px] text-emerald-400 font-bold uppercase tracking-widest block">Sistema de Transacciones</span>
@@ -105,134 +151,134 @@
 					<div id="modal-item-emoji" class="text-3xl">📦</div>
 					<div class="flex-1 min-w-0">
 						<h3 id="modal-item-nombre" class="text-xs font-bold truncate uppercase">Nombre Objeto</h3>
-						<div class="text-xs font-black text-emerald-400 mt-1">
-							<span id="modal-item-precio">0</span>
-							€
-						</div>
+						<div class="text-xs font-black text-emerald-400 mt-1"><span id="modal-item-precio">0</span> €</div>
 					</div>
 				</div>
-
-				<p class="text-[11px] text-slate-400 leading-relaxed mb-6">
-					¿Confirmas que deseas transferir los fondos de tu escudería para adquirir este artículo de lujo?
-				</p>
+				<p class="text-[11px] text-slate-400 leading-relaxed mb-6">¿Confirmas que deseas transferir los fondos de tu escudería para adquirir este artículo de lujo?</p>
 			</div>
 
 			<div class="flex gap-2 justify-end">
-				<button id="btnModalCancelar" onclick="cerrarModalCompra()" class="border border-slate-800 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-white py-2 px-4 rounded text-xs uppercase font-bold cursor-pointer transition-all">
-					Cancelar
-				</button>
-				<button id="btnModalConfirmar" onclick="ejecutarCompraProceso()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2 px-5 rounded text-xs uppercase tracking-wider cursor-pointer transition-all">
-					Confirmar Pago
-				</button>
+				<button id="btnModalCancelar" onclick="cerrarModalCompra()" class="border border-slate-800 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-white py-2 px-4 rounded text-xs uppercase font-bold cursor-pointer transition-all">Cancelar</button>
+				<button id="btnModalConfirmar" onclick="ejecutarCompraProceso()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2 px-5 rounded text-xs uppercase tracking-wider cursor-pointer transition-all">Confirmar Pago</button>
 			</div>
 		</div>
 	</div>
+
 	<script>
-		// Sistema interactivo de Pestañas
-function switchTab(catKey) {
-document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-document.querySelectorAll('.tab-btn').forEach(btn => {
-btn.className = "tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-slate-900 text-slate-400 border-slate-800 hover:text-white";
-});
+		let tiendaSelectedItemId = null;
 
-document.getElementById('tabContent-' + catKey).classList.remove('hidden');
+		function abrirModalCompra(id, nombre, precio, emoji) {
+			tiendaSelectedItemId = id;
+			document.getElementById('modal-msg-exito').classList.add('hidden');
+			document.getElementById('modal-msg-error').classList.add('hidden');
+			document.getElementById('modal-cuerpo-info').classList.remove('hidden');
+			document.getElementById('btnModalCancelar').classList.remove('hidden');
 
-const activeBtn = document.getElementById('tabBtn-' + catKey);
-activeBtn.className = "tab-btn px-5 py-2 font-racing text-xs font-black uppercase tracking-wider rounded border transition-all bg-cyan-500 text-slate-950 border-cyan-400";
-}
+			document.getElementById('modal-item-nombre').innerText = nombre;
+			document.getElementById('modal-item-precio').innerText = new Intl.NumberFormat('es-ES').format(precio);
+			document.getElementById('modal-item-emoji').innerText = emoji;
 
-let tiendaSelectedItemId = null;
+			const btnConfirmar = document.getElementById('btnModalConfirmar');
+			btnConfirmar.classList.remove('hidden');
+			btnConfirmar.disabled = false;
+			btnConfirmar.innerText = "Confirmar Pago";
 
-function abrirModalCompra(id, nombre, precio, emoji) {
-tiendaSelectedItemId = id;
+			document.getElementById('modal-confirmar-compra').classList.remove('hidden');
+		}
 
-// Resetear visibilidad de elementos internos
-document.getElementById('modal-msg-exito').classList.add('hidden');
-document.getElementById('modal-msg-error').classList.add('hidden');
-document.getElementById('modal-cuerpo-info').classList.remove('hidden');
-document.getElementById('btnModalCancelar').classList.remove('hidden');
+		function cerrarModalCompra() {
+			tiendaSelectedItemId = null;
+			document.getElementById('modal-confirmar-compra').classList.add('hidden');
+		}
 
-// Rellenar datos dinámicos del producto pulsado
-document.getElementById('modal-item-nombre').innerText = nombre;
-document.getElementById('modal-item-precio').innerText = new Intl.NumberFormat('es-ES').format(precio);
-document.getElementById('modal-item-emoji').innerText = emoji;
+		function ejecutarCompraProceso() {
+			if (!tiendaSelectedItemId) return;
+			const btnModal = document.getElementById('btnModalConfirmar');
+			const btnCancelar = document.getElementById('btnModalCancelar');
+			const msgExito = document.getElementById('modal-msg-exito');
+			const msgError = document.getElementById('modal-msg-error');
 
-// Resetear el botón de confirmación interno
-const btnConfirmar = document.getElementById('btnModalConfirmar');
-btnConfirmar.classList.remove('hidden');
-btnConfirmar.disabled = false;
-btnConfirmar.innerText = "Confirmar Pago";
+			btnModal.disabled = true;
+			btnModal.innerText = "PROCESANDO PAGO...";
 
-document.getElementById('modal-confirmar-compra').classList.remove('hidden');
-}
+			let formData = new FormData();
+			formData.append('partidaId', '{{ partida.idPartida }}');
+			formData.append('itemId', tiendaSelectedItemId);
 
-function cerrarModalCompra() {
-tiendaSelectedItemId = null;
-document.getElementById('modal-confirmar-compra').classList.add('hidden');
-}
+			fetch('/api/career/shop/buy', {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					msgExito.innerText = "✓ " + data.message;
+					msgExito.classList.remove('hidden');
+					document.getElementById('modal-cuerpo-info').classList.add('hidden');
+					btnCancelar.classList.add('hidden');
+					btnModal.classList.add('hidden');
 
-function ejecutarCompraProceso() {
-if (! tiendaSelectedItemId) 
-return;
+					if (document.getElementById('headerDinero')) {
+						document.getElementById('headerDinero').innerText = data.nuevoDinero;
+					}
+					if (document.getElementById('headerEstilo')) {
+						document.getElementById('headerEstilo').innerText = data.nuevoEstilo + " / 100";
+					}
 
+					setTimeout(() => {
+						cerrarModalCompra();
+						window.location.reload();
+					}, 1000);
+				} else {
+					msgError.innerText = "⚠️ RECHAZADO: " + data.message;
+					msgError.classList.remove('hidden');
+					btnModal.disabled = false;
+					btnModal.innerText = "Confirmar Pago";
+				}
+			})
+			.catch(error => {
+				msgError.innerText = "❌ Error en el servidor central.";
+				btnModal.disabled = false;
+			});
+		}
 
+		function ejecutarReparacion(itemId, coste) {
+			const btn = document.getElementById('btnBuy-' + itemId);
+			if (!btn) return;
 
-const btnModal = document.getElementById('btnModalConfirmar');
-const btnCancelar = document.getElementById('btnModalCancelar');
-const msgExito = document.getElementById('modal-msg-exito');
-const msgError = document.getElementById('modal-msg-error');
+			btn.disabled = true;
+			btn.innerText = "REPARANDO BIEN...";
 
-btnModal.disabled = true;
-btnModal.innerText = "PROCESANDO PAGO...";
+			let formData = new FormData();
+			formData.append('partidaId', '{{ partida.idPartida }}');
+			formData.append('itemId', itemId);
 
-// Guardamos la referencia del botón de la rejilla de fondo antes del fetch
-const btnOriginal = document.getElementById('btnBuy-' + tiendaSelectedItemId);
-
-let formData = new FormData();
-formData.append('partidaId', '{{ partida.idPartida }}');
-formData.append('itemId', tiendaSelectedItemId);
-
-fetch('/api/career/shop/buy', {
-method: 'POST',
-body: formData
-}).then(response => response.json()).then(data => {
-if (data.success) {
-msgExito.innerText = "✓ " + data.message;
-msgExito.classList.remove('hidden');
-
-document.getElementById('modal-cuerpo-info').classList.add('hidden');
-btnCancelar.classList.add('hidden');
-btnModal.classList.add('hidden');
-
-// Actualizar contadores del header originales
-if (document.getElementById('headerDinero')) {
-document.getElementById('headerDinero').innerText = data.nuevoDinero;
-}
-if (document.getElementById('headerEstilo')) {
-document.getElementById('headerEstilo').innerText = data.nuevoEstilo + " / 100";
-}
-
-// Cambiar visualmente tu botón de la cuadrícula a Adquirido
-if (btnOriginal) {
-btnOriginal.className = "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold px-4 py-2 rounded text-xs uppercase tracking-wider cursor-not-allowed";
-btnOriginal.innerText = "✓ Adquirido";
-btnOriginal.onclick = null;
-}
-
-// Auto-cerrar modal tras unos instantes sin interferir en las rutas
-setTimeout(cerrarModalCompra, 1200);
-} else {
-msgError.innerText = "⚠️ RECHAZADO: " + data.message;
-msgError.classList.remove('hidden');
-btnModal.disabled = false;
-btnModal.innerText = "Confirmar Pago";
-}
-}).catch(error => {
-msgError.innerText = "❌ Error de conexión con la central de la Boutique.";
-msgError.classList.remove('hidden');
-btnModal.disabled = false;
-btnModal.innerText = "Confirmar Pago";
-});
-}
+			fetch('/api/career/shop/repair', {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					if (document.getElementById('headerDinero')) {
+						document.getElementById('headerDinero').innerText = data.nuevoDinero;
+					}
+					window.location.reload();
+				} else {
+					btn.innerText = "⚠️ " + data.message;
+					setTimeout(() => {
+						btn.disabled = false;
+						btn.innerText = "⚙️ Reparar (" + coste + " €)";
+					}, 3000);
+				}
+			})
+			.catch(error => {
+				btn.innerText = "❌ Error de Red";
+				setTimeout(() => {
+					btn.disabled = false;
+					btn.innerText = "⚙️ Reparar (" + coste + " €)";
+				}, 2000);
+			});
+		}
 	</script>
 {% endblock %}

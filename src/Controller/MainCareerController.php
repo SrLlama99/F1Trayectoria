@@ -12,6 +12,7 @@ use App\Entity\Escuderia;
 use App\Entity\Pais;
 use App\Entity\Logro;
 use App\Entity\LogroPartida;
+use App\Entity\TiendaCompra;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -244,7 +245,14 @@ class MainCareerController extends AbstractController
         $porcentajeExp = $expNecesariaSiguienteNivel > 0
             ? min(100, round(($expActual / $expNecesariaSiguienteNivel) * 100))
             : 0;
-
+        // ─── COMPROBACIÓN DE CARRERA ESTA SEMANA ───
+        // Buscamos si existe un emparejamiento en CalendarioTemporada para la semana, año y categoría actuales
+        $carreraEstaSemana = $em->getRepository(CalendarioTemporada::class)->findOneBy([
+            'partida' => $partida,
+            'categoria' => $pilotoHumano->getCategoria(),
+            'anoSimulacion' => $partida->getIngameAno(),
+            'semanaCarrera' => $partida->getIngameSemana()
+        ]);
         return $this->render('career/main.html.twig', [
             'partida' => $partida,
             'piloto' => $pilotoHumano,
@@ -256,7 +264,8 @@ class MainCareerController extends AbstractController
             'proximasTres' => $proximasTres,
             'clasificacionRecortada' => $recorteClasificacionPilotos,
             'indiceHumanoGlobal' => $indiceHumano + 1,
-            'clasificacionEquipos' => $recorteClasificacionEquipos
+            'clasificacionEquipos' => $recorteClasificacionEquipos,
+            'tieneCarrera' => ($carreraEstaSemana !== null) // Booleano para el botón del Paddock
         ]);
     }
 
@@ -296,11 +305,10 @@ class MainCareerController extends AbstractController
             foreach ($pilotosFiltrados as $p) {
                 $media = ($p->getStatClasificacion() +
                     $p->getStatRitmo() +
-                    $p->getStatConsistencia() +
                     $p->getStatAdelantamiento() +
                     $p->getStatDefensa() +
                     $p->getStatGestionNeumaticos() +
-                    $p->getStatMojado()) / 7;
+                    $p->getStatMojado()) / 6;
 
                 $pilotosJson[] = [
                     'id' => $p->getId(),
@@ -587,5 +595,136 @@ class MainCareerController extends AbstractController
         $em->flush();
 
         return new JsonResponse(['success' => true]);
+    }
+
+    #[Route('/api/career/next-week', name: 'api_career_next_week', methods: ['POST'])]
+    public function nextWeek(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $partidaId = $request->request->get('partidaId');
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+
+        if (!$partida || $partida->getUsuario() !== $this->getUser()) {
+            return new JsonResponse(['success' => false, 'message' => 'Partida inválida.'], 403);
+        }
+
+        // 1. Avanzar la semana del simulador
+        $nuevaSemana = $partida->getIngameSemana() + 1;
+        if ($nuevaSemana > 52) { // Asumiendo un año de 52 semanas estándar fia
+            $nuevaSemana = 1;
+            $partida->setIngameAno($partida->getIngameAno() + 1);
+        }
+        $partida->setIngameSemana($nuevaSemana);
+        $em->flush();
+
+        // 2. Tirada del 50% para ver si salta un evento aleatorio
+        $lanzarDado = rand(1, 100);
+        if ($lanzarDado <= 50) {
+            // Obtenemos todas las plantillas disponibles
+            $plantillas = $em->getRepository(\App\Entity\EventoPlantilla::class)->findAll();
+
+            if (!empty($plantillas)) {
+            // Selección aleatoria simple (se puede mejorar usando el peso de probabilidad si se desea)
+                /** @var \App\Entity\EventoPlantilla $eventoElegido */
+                $eventoElegido = $plantillas[array_rand($plantillas)];
+
+                // Estructuramos las opciones para enviarlas al JavaScript de la vista
+                $opcionesPayload = [];
+                foreach ($eventoElegido->getOpciones() as $opcion) {
+                    $opcionesPayload[] = [
+                        'id' => $opcion->getId(),
+                        'texto' => $opcion->getTextoBoton()
+                    ];
+                }
+
+                return new JsonResponse([
+                    'success' => true,
+                    'triggerEvento' => true,
+                    'evento' => [
+                        'titulo' => $eventoElegido->getTitulo(),
+                        'descripcion' => $eventoElegido->getDescripcion(),
+                        'opciones' => $opcionesPayload
+                    ]
+                ]);
+            }
+        }
+
+        // Si no hubo evento, refrescamos directamente el paddock de forma nativa
+        return new JsonResponse([
+            'success' => true,
+            'triggerEvento' => false
+        ]);
+    }
+
+    #[Route('/api/career/event/decision', name: 'api_career_event_decision', methods: ['POST'])]
+    public function processDecision(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $partidaId = $request->request->get('partidaId');
+        $opcionId = $request->request->get('opcionId');
+
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        $piloto = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
+
+        if (!$partida || !$piloto || $partida->getUsuario() !== $this->getUser()) {
+            return new JsonResponse(['success' => false, 'message' => 'Acceso denegado.'], 403);
+        }
+
+        $opcion = $em->getRepository(\App\Entity\EventoOpcion::class)->find($opcionId);
+        if (!$opcion) {
+            return new JsonResponse(['success' => false, 'message' => 'Opción no localizada.'], 404);
+        }
+
+        // Procesar cada consecuencia asociada a la respuesta elegida por el piloto
+        foreach ($opcion->getConsecuencias() as $consecuencia) {
+            switch ($consecuencia->getTipoEfecto()) {
+                case 'MODIFICAR_DINERO':
+                    $piloto->setDinero($piloto->getDinero() + $consecuencia->getCantidad());
+                    break;
+
+                case 'MODIFICAR_AFINIDAD':
+                    // 1. Buscamos la relación específica del piloto para esta partida.
+                    // Para hacerlo flexible, asumiremos que puedes definir el objetivo en el evento.
+                    // Si el evento no especifica actor, por defecto buscaremos 'NOVIA' (tu pareja).
+                    $tipoActorAfectado = 'NOVIA'; 
+            
+            // Opcional: Si en un futuro añades un campo 'actor_afectado' en la consecuencia, lo lees aquí:
+            // $tipoActorAfectado = $consecuencia->getActorAfectado() ?: 'NOVIA';
+
+                    /** @var PilotoRelacion|null $relacion */
+                    $relacion = $em->getRepository(\App\Entity\PilotoRelacion::class)->findOneBy([
+                        'partida' => $partida,
+                        'pilotoUsuario' => $piloto,
+                        'tipoActor' => $tipoActorAfectado
+                    ]);
+
+                    // 2. Si existe la relación (ej: tiene novia en esta partida), alteramos su afinidad
+                    if ($relacion) {
+                        $nuevaAfinidad = $relacion->getAfinidad() + $consecuencia->getCantidad();
+
+                        // Cotos lógicos según tu escala de 1 a 100 de la entidad
+                        $nuevaAfinidad = max(1, min(100, $nuevaAfinidad));
+
+                        $relacion->setAfinidad($nuevaAfinidad);
+                    }
+                    break;
+
+                case 'AUMENTAR_DESGASTE':
+                    // Aplica desgaste a un bien aleatorio comprado en esta partida si existe
+                    $compras = $em->getRepository(TiendaCompra::class)->findBy(['partida' => $partida, 'pilotoUsuario' => $piloto]);
+                    if (!empty($compras)) {
+                        /** @var TiendaCompra $compraElegida */
+                        $compraElegida = $compras[array_rand($compras)];
+                        $nuevoDesgaste = min(100, $compraElegida->getDesgaste() + $consecuencia->getCantidad());
+                        $compraElegida->setDesgaste($nuevoDesgaste);
+                    }
+                    break;
+            }
+        }
+
+        $em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Decisión registrada en el Paddock oficial. Simulando impactos...'
+        ]);
     }
 }

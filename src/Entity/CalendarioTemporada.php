@@ -43,6 +43,9 @@ class CalendarioTemporada
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'PENDIENTE'])]
     private string $estadoEvento = 'PENDIENTE'; // 'PENDIENTE' o 'COMPLETADO'
 
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'DEFAULT'])]
+    private string $formato = 'DEFAULT';
+
     public function getId(): ?int { return $this->id; }
 
     public function getPartida(): ?PartidaGuardada { return $this->partida; }
@@ -69,4 +72,7 @@ class CalendarioTemporada
 
     public function getEstadoEvento(): string { return $this->estadoEvento; }
     public function setEstadoEvento(string $estado): self { $this->estadoEvento = $estado; return $this; }
+
+    public function getFormato(): string { return $this->formato; }
+    public function setFormato(string $formato): self { $this->formato = $formato; return $this; }
 }

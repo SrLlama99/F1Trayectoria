@@ -24,59 +24,49 @@ class ShopController extends AbstractController
         }
 
         $piloto = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
-
-        // Obtener todos los items del catálogo maestro
         $todosLosItems = $em->getRepository(TiendaItem::class)->findAll();
 
-        // Obtener qué IDs de items ya ha comprado el piloto en esta partida
-        $compras = $em->getRepository(TiendaCompra::class)->findBy([
+        // Obtener las compras activas mapeadas por el ID del item
+        $comprasRaw = $em->getRepository(TiendaCompra::class)->findBy([
             'partida' => $partida,
             'pilotoUsuario' => $piloto
         ]);
-        
-        $idsComprados = [];
-        foreach ($compras as $compra) {
-            $idsComprados[] = $compra->getItem()->getId();
-        }
 
-        // Clasificar los items por categorías para las pestañas de Twig
-        $tiendaData = ['OBJETOS' => [], 'VEHICULOS' => [], 'PROPIEDADES' => []];
-        foreach ($todosLosItems as $item) {
-            $cat = $item->getCategoria();
-            if (isset($tiendaData[$cat])) {
-                $tiendaData[$cat][] = [
-                    'entity' => $item,
-                    'comprado' => in_array($item->getId(), $idsComprados)
-                ];
-            }
+        $comprasMapeadas = [];
+        foreach ($comprasRaw as $compra) {
+            $comprasMapeadas[$compra->getItem()->getId()] = [
+                'idCompra' => $compra->getId(),
+                'desgaste' => $compra->getDesgaste()
+            ];
         }
 
         return $this->render('career/shop.html.twig', [
             'partida' => $partida,
             'piloto' => $piloto,
-            'tienda' => $tiendaData
+            'items' => $todosLosItems,
+            'comprasMapeadas' => $comprasMapeadas
         ]);
     }
 
     #[Route('/api/career/shop/buy', name: 'api_career_shop_buy', methods: ['POST'])]
     public function buyItem(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        $partidaId = (int)$request->request->get('partidaId');
-        $itemId = (int)$request->request->get('itemId');
+        $partidaId = $request->request->get('partidaId');
+        $itemId = $request->request->get('itemId');
 
         $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
         if (!$partida || $partida->getUsuario() !== $this->getUser()) {
-            return new JsonResponse(['success' => false, 'message' => 'Acceso no autorizado.'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Acceso denegado.'], Response::HTTP_FORBIDDEN);
         }
 
         $piloto = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
         $item = $em->getRepository(TiendaItem::class)->find($itemId);
 
         if (!$item) {
-            return new JsonResponse(['success' => false, 'message' => 'El artículo no existe en el catálogo maestro.'], 404);
+            return new JsonResponse(['success' => false, 'message' => 'El artículo solicitado no existe.'], 404);
         }
 
-        // Verificar si ya está comprado
+        // Verificar si ya se posee y NO está roto
         $yaComprado = $em->getRepository(TiendaCompra::class)->findOneBy([
             'partida' => $partida,
             'pilotoUsuario' => $piloto,
@@ -84,24 +74,22 @@ class ShopController extends AbstractController
         ]);
 
         if ($yaComprado) {
-            return new JsonResponse(['success' => false, 'message' => 'Ya posees este artículo de lujo.'], 400);
+            return new JsonResponse(['success' => false, 'message' => 'Ya posees este artículo en tu propiedad.'], 400);
         }
 
-        // Verificar fondos líquidos
         if ($piloto->getDinero() < $item->getPrecio()) {
             return new JsonResponse(['success' => false, 'message' => 'Fondos insuficientes en tu cuenta corriente.'], 400);
         }
 
         try {
-            // Deducción y bonificación transaccional
             $piloto->setDinero($piloto->getDinero() - $item->getPrecio());
             $piloto->setEstiloDeVida($piloto->getEstiloDeVida() + $item->getBonoEstiloDeVida());
 
-            // Registrar propiedad del bien comprado
             $nuevaCompra = new TiendaCompra();
             $nuevaCompra->setPartida($partida);
             $nuevaCompra->setPilotoUsuario($piloto);
             $nuevaCompra->setItem($item);
+            $nuevaCompra->setDesgaste(0); // Forzar inicio sin desgaste
 
             $em->persist($nuevaCompra);
             $em->flush();
@@ -110,11 +98,60 @@ class ShopController extends AbstractController
                 'success' => true,
                 'nuevoDinero' => number_format($piloto->getDinero(), 0, ',', '.') . ' €',
                 'nuevoEstilo' => $piloto->getEstiloDeVida(),
-                'message' => '¡Transacción completada! ' . $item->getNombre() . ' añadido a tu inventario personal.'
+                'message' => '¡Transacción completada! ' . $item->getNombre() . ' adquirido.'
             ]);
-
         } catch (\Exception $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Fallo bancario en el servidor.'], 500);
+            return new JsonResponse(['success' => false, 'message' => 'Error de procesamiento en la cámara acorazada.'], 500);
+        }
+    }
+
+    #[Route('/api/career/shop/repair', name: 'api_career_shop_repair', methods: ['POST'])]
+    public function repairItem(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $partidaId = $request->request->get('partidaId');
+        $itemId = $request->request->get('itemId');
+
+        $partida = $em->getRepository(PartidaGuardada::class)->find($partidaId);
+        $piloto = $em->getRepository(PilotoUsuario::class)->findOneBy(['partida' => $partida]);
+        $item = $em->getRepository(TiendaItem::class)->find($itemId);
+
+        $compra = $em->getRepository(TiendaCompra::class)->findOneBy([
+            'partida' => $partida,
+            'pilotoUsuario' => $piloto,
+            'item' => $item
+        ]);
+
+        if (!$compra) {
+            return new JsonResponse(['success' => false, 'message' => 'No eres el propietario de este objeto.'], 400);
+        }
+
+        $desgaste = $compra->getDesgaste();
+        if ($desgaste <= 0) {
+            return new JsonResponse(['success' => false, 'message' => 'El objeto ya está en perfecto estado.'], 400);
+        }
+
+        // FÓRMULA DE COSTES CRECIENTES: A mayor desgaste, reparar cada punto es más caro.
+        // Coste base de reparación total es el 50% del valor del item, escalado por el desgaste al cuadrado.
+        $factorDesgaste = $desgaste / 100;
+        $costeReparacion = (int) (($item->getPrecio() * 0.5) * ($factorDesgaste * $factorDesgaste) + ($desgaste * 5));
+        $costeReparacion = max(10, $costeReparacion); // Mínimo 10€
+
+        if ($piloto->getDinero() < $costeReparacion) {
+            return new JsonResponse(['success' => false, 'message' => 'No tienes suficiente dinero para afrontar la reparación. Coste: ' . $costeReparacion . ' €'], 400);
+        }
+
+        try {
+            $piloto->setDinero($piloto->getDinero() - $costeReparacion);
+            $compra->setDesgaste(0); // Se restaura por completo al repararlo
+            $em->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'nuevoDinero' => number_format($piloto->getDinero(), 0, ',', '.') . ' €',
+                'message' => 'Objeto reparado por completo. Mantenimiento certificado.'
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Error al procesar la orden del taller.'], 500);
         }
     }
 }

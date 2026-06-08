@@ -43,7 +43,7 @@
 						{# Bloque de Pilotos #}
 						<div id="list-pilotos" class="space-y-2">
 							{% for piloto in pilotos %}
-								{% set media = (piloto.statClasificacion + piloto.statRitmo + piloto.statConsistencia + piloto.statAdelantamiento + piloto.statDefensa + piloto.statGestionNeumaticos + piloto.statMojado) / 7 %}
+								{% set media = (piloto.statClasificacion + piloto.statRitmo + piloto.statAdelantamiento + piloto.statDefensa + piloto.statGestionNeumaticos + piloto.statMojado) / 6 %}
 
 								{# 🟢 ENLACE AÑADIDO AQUÍ #}
 								<a href="{{ path('app_career_profile', { 'partidaId': partidaId, 'idPilotoIa': piloto.id }) }}" class="block transition-transform hover:scale-[1.01]">

@@ -44,7 +44,6 @@ class PilotoIa
 
     #[ORM\Column(type: 'integer')] private int $statClasificacion = 50;
     #[ORM\Column(type: 'integer')] private int $statRitmo = 50;
-    #[ORM\Column(type: 'integer')] private int $statConsistencia = 50;
     #[ORM\Column(type: 'integer')] private int $statAdelantamiento = 50;
     #[ORM\Column(type: 'integer')] private int $statDefensa = 50;
     #[ORM\Column(type: 'integer')] private int $statGestionNeumaticos = 50;
@@ -133,16 +132,6 @@ class PilotoIa
     public function setStatRitmo(int $stat): self
     {
         $this->statRitmo = $stat;
-        return $this;
-    }
-
-    public function getStatConsistencia(): int
-    {
-        return $this->statConsistencia;
-    }
-    public function setStatConsistencia(int $stat): self
-    {
-        $this->statConsistencia = $stat;
         return $this;
     }
 

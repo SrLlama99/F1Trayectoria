@@ -105,9 +105,18 @@
 									</div>
 								</div>
 
-								<a href="#" class="w-full mt-2 text-center font-racing text-xs font-black tracking-widest uppercase bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 py-3 rounded-lg transition-all block shadow-[0_4px_15px_rgba(6,182,212,0.2)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.4)] hover:-translate-y-0.5 active:translate-y-0">
-									🏁 IR AL CIRCUITO →
-								</a>
+								<div class="bg-slate-900/50 border border-slate-900 p-5 rounded-xl backdrop-blur-sm flex flex-col justify-between h-full space-y-4">
+
+									{% if tieneCarrera %}
+										<a href="{{ path('app_career_weekend', {'partidaId': partida.idPartida}) }}" class="block w-full text-center bg-red-600 hover:bg-red-500 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest font-racing italic transition-all shadow-lg shadow-red-600/10">
+											🏁 Ir al Circuito
+										</a>
+									{% else %}
+										<button onclick="ejecutarPasarSemana()" class="block w-full text-center bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-widest font-racing italic cursor-pointer transition-all shadow-lg shadow-cyan-500/10">
+											⏳ Pasar Semana
+										</button>
+									{% endif %}
+								</div>
 							</div>
 						{% else %}
 							<p class="text-xs text-slate-500 italic font-mono py-2">Fin de la temporada. No hay eventos pendientes en el calendario.</p>
@@ -149,11 +158,11 @@
 							<div class="space-y-2">
 								{% for fila in clasificacionRecortada %}
 									<div class="flex items-center justify-between p-3 rounded-lg border transition-all
-																																																							                        {% if fila.esHumano %}
-																																																							                            bg-cyan-500/10 border-cyan-500 text-white font-bold shadow-[0_0_15px_rgba(6,182,212,0.1)]
-																																																							                        {% else %}
-																																																							                            bg-slate-950/40 border-slate-900/60 text-slate-400
-																																																							                        {% endif %}">
+																																																																																								                        {% if fila.esHumano %}
+																																																																																								                            bg-cyan-500/10 border-cyan-500 text-white font-bold shadow-[0_0_15px_rgba(6,182,212,0.1)]
+																																																																																								                        {% else %}
+																																																																																								                            bg-slate-950/40 border-slate-900/60 text-slate-400
+																																																																																								                        {% endif %}">
 
 										<div class="flex items-center gap-3">
 											<span class="font-mono text-xs {% if fila.esHumano %}text-cyan-400 font-black{% else %}text-slate-600{% endif %}">
@@ -191,11 +200,11 @@
 						<div class="space-y-2">
 							{% for equipo in clasificacionEquipos %}
 								<div class="flex items-center justify-between p-2.5 rounded-lg border text-xs font-mono
-																																								                {% if equipo.esTuEquipo %}
-																																								                    bg-emerald-500/10 border-emerald-500/40 text-emerald-300 font-bold shadow-[0_0_15px_rgba(16,185,129,0.05)]
-																																								                {% else %}
-																																								                    bg-slate-950/30 border-slate-900/50 text-slate-400
-																																								                {% endif %}">
+																																																																						                {% if equipo.esTuEquipo %}
+																																																																						                    bg-emerald-500/10 border-emerald-500/40 text-emerald-300 font-bold shadow-[0_0_15px_rgba(16,185,129,0.05)]
+																																																																						                {% else %}
+																																																																						                    bg-slate-950/30 border-slate-900/50 text-slate-400
+																																																																						                {% endif %}">
 
 									<div class="flex items-center gap-2.5">
 										<span class="text-slate-600 font-bold text-[10px]">P{{ equipo.posicionReal }}</span>
@@ -343,4 +352,77 @@
 			</div>
 		</div>
 	</div>
+
+	<div id="modal-evento-paddock" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+		<div class="relative w-full max-w-lg bg-slate-900 border border-slate-800 border-t-4 border-t-cyan-500 p-6 rounded-2xl shadow-2xl text-white font-mono">
+			<header class="mb-4 border-b border-slate-850 pb-3">
+				<span class="text-[9px] text-cyan-400 font-bold uppercase tracking-widest block">⚠️ NOTIFICACIÓN DEL PADDOCK CENTRAL</span>
+				<h2 id="evento-titulo" class="text-base font-black uppercase tracking-wider mt-0.5 text-slate-100">Título del Evento</h2>
+			</header>
+
+			<p id="evento-descripcion" class="text-xs text-slate-300 leading-relaxed mb-6 bg-slate-950/60 border border-slate-850 p-4 rounded-xl">
+				Descripción completa detallando el imprevisto que ha ocurrido esta semana.
+			</p>
+
+			<div id="evento-opciones-contenedor" class="flex flex-col gap-3"></div>
+		</div>
+	</div>
+
+	<script>
+		function ejecutarPasarSemana() {
+let formData = new FormData();
+formData.append('partidaId', '{{ partida.idPartida }}');
+
+fetch('/api/career/next-week', {
+method: 'POST',
+body: formData
+}).then(response => response.json()).then(data => {
+if (data.success) {
+if (data.triggerEvento) { // Inyectar textos al modal
+document.getElementById('evento-titulo').innerText = data.evento.titulo;
+document.getElementById('evento-descripcion').innerText = data.evento.descripcion;
+
+const contenedor = document.getElementById('evento-opciones-contenedor');
+contenedor.innerHTML = "";
+// Limpiar iteraciones previas
+
+// Renderizar las opciones disponibles en la base de datos
+data.evento.opciones.forEach(opcion => {
+const btn = document.createElement('button');
+btn.className = "w-full text-left bg-slate-950 hover:bg-slate-850 border border-slate-800 text-xs font-bold p-3.5 rounded-xl transition-all hover:border-cyan-500 text-slate-300 hover:text-white cursor-pointer";
+btn.innerText = "➢ " + opcion.texto;
+btn.onclick = function () {
+tomarDecision(opcion.id);
+};
+contenedor.appendChild(btn);
+});
+
+// Mostrar el modal quitando la clase hidden
+document.getElementById('modal-evento-paddock').classList.remove('hidden');
+} else { // Si no hay evento, recargamos limpiamente para actualizar contadores de semana
+window.location.reload();
+}
+}
+}).catch(error => console.error("Error al pasar la semana fia:", error));
+}
+
+function tomarDecision(opcionId) {
+let formData = new FormData();
+formData.append('partidaId', '{{ partida.idPartida }}');
+formData.append('opcionId', opcionId);
+
+// Deshabilitar botones para evitar doble clic accidental
+const botones = document.querySelectorAll('#evento-opciones-contenedor button');
+botones.forEach(b => b.disabled = true);
+
+fetch('/api/career/event/decision', {
+method: 'POST',
+body: formData
+}).then(response => response.json()).then(data => {
+if (data.success) { // Recargar la interfaz aplicando todas las penalizaciones o bonus de golpe
+window.location.reload();
+}
+}).catch(error => console.error("Error al procesar la decisión:", error));
+}
+	</script>
 {% endblock %}

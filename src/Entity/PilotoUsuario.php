@@ -43,9 +43,6 @@ class PilotoUsuario
     private int $statRitmo = 50;
 
     #[ORM\Column(type: 'integer', options: ['default' => 50])]
-    private int $statConsistencia = 50;
-
-    #[ORM\Column(type: 'integer', options: ['default' => 50])]
     private int $statAdelantamiento = 50;
 
     #[ORM\Column(type: 'integer', options: ['default' => 50])]
@@ -176,16 +173,6 @@ class PilotoUsuario
     public function setStatRitmo(int $stat): self
     {
         $this->statRitmo = $stat;
-        return $this;
-    }
-
-    public function getStatConsistencia(): int
-    {
-        return $this->statConsistencia;
-    }
-    public function setStatConsistencia(int $stat): self
-    {
-        $this->statConsistencia = $stat;
         return $this;
     }
 

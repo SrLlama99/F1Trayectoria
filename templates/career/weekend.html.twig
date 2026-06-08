@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+{% set partidaId = partida.idPartida %}
+{% block title %}FIA PADDOCK - WEEKEND CENTRAL
+{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-slate-950 text-white p-6 pl-20 transition-all">
+		<div class="max-w-4xl mx-auto space-y-6">
+
+			<header
+				class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl backdrop-blur-sm flex justify-between items-center">
+				{# Dentro del header de weekend.html.twig #}
+				<div>
+					<div class="flex items-center gap-2">
+						<span class="text-xs font-bold uppercase font-mono tracking-widest text-red-500">
+							🏁 Fin de Semana de Competición // Ronda
+							{{ carrera.ordenCarrera }}
+                            // {{ carrera.categoria}} // Seamana {{ carrera.semanaCarrera }} - Año {{ carrera.anoSimulacion }}
+						</span>
+
+						{% if carrera.formato == 'SPRINT' %}
+							<span class="text-[9px] font-mono bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded uppercase font-bold tracking-wider animate-pulse">
+								💥 Formato Sprint
+							</span>
+						{% else %}
+							<span class="text-[9px] font-mono bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded uppercase font-bold tracking-wider">
+								📊 Formato Estándar
+							</span>
+						{% endif %}
+					</div>
+
+					<h1 class="text-3xl font-black font-racing uppercase italic tracking-wide mt-1 text-slate-100">
+						Gran Premio de {{ carrera.circuito.pais.nombrePais|default('Oficial') }}
+					</h1>
+					<p class="text-xs text-slate-400 font-mono mt-1">
+						Circuito de Destino:
+						<span class="text-cyan-400">{{ carrera.circuito.nombreCircuito|default('Trazado Oficial FIA') }}</span>
+					</p>
+				</div>
+			</header>
+
+			<div class="space-y-3">
+				<h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono pl-1">Orden de Eventos del Fin de Semana</h3>
+
+				{% for index, datos in sesiones %}
+					{% set estaCompletada = index < sesionActualIndex %}
+					{% set esProxima = index == sesionActualIndex %}
+
+					<div class="border rounded-xl transition-all p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4
+							                    {% if esProxima %}
+							                        bg-gradient-to-r from-slate-900 to-cyan-950/20 border-cyan-500/40 shadow-lg shadow-cyan-500/5
+							                    {% elseif estaCompletada %}
+							                        bg-slate-900/20 border-slate-900 opacity-60
+							                    {% else %}
+							                        bg-slate-900/10 border-slate-900/60 opacity-40
+							                    {% endif %}">
+
+						<div class="flex items-center gap-4 font-mono">
+							<span class="text-2xl p-2 bg-slate-950 rounded-lg border border-slate-850">
+								{{ datos.icono }}
+							</span>
+							<div>
+								<div class="flex items-center gap-2">
+									<span class="text-xs font-bold text-slate-400">[{{ datos.codigo }}]</span>
+									<h4 class="text-sm font-black uppercase text-slate-100">{{ datos.nombre }}</h4>
+								</div>
+								<p class="text-[10px] text-slate-500 mt-0.5">
+									{% if estaCompletada %}
+										🟢 Sesión finalizada. Telemetría guardada en la base de datos.
+									{% elseif esProxima %}
+										⚡ Próxima sesión programada. Configura el monoplaza antes de salir.
+									{% else %}
+										🔒 Bloqueado hasta completar las sesiones previas.
+									{% endif %}
+								</p>
+							</div>
+						</div>
+
+						<div class="w-full sm:w-auto">
+							{% if esProxima %}
+								<a href="{{ path('app_career_weekend_simulate', {'partidaId': partida.idPartida, 'sesionCodigo': datos.codigo}) }}" class="block text-center bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-black text-xs uppercase p-3 px-6 rounded-lg transition-all tracking-wider shadow-md">
+									🚀 Disputar Sesión
+								</a>
+							{% elseif estaCompletada %}
+								<span class="block text-center border border-emerald-500/30 text-emerald-400 font-mono text-[10px] uppercase p-2 px-4 bg-emerald-500/5 rounded-lg">
+									✓ HECHO
+								</span>
+							{% else %}
+								<span class="block text-center border border-slate-800 text-slate-600 font-mono text-[10px] uppercase p-2 px-4 bg-slate-950 rounded-lg cursor-not-allowed">
+									🔒 BLOQUEADO
+								</span>
+							{% endif %}
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+
+		</div>
+	</div>
+{% endblock %}

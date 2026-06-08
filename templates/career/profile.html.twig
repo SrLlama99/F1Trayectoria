@@ -122,11 +122,6 @@
 								</div>
 								<span class="text-[8px] text-slate-600 block mt-1 uppercase tracking-tight">Estatus del Paddock</span>
 							</div>
-						{% else %}
-							<!-- Vista reducida o de datos alternativos para los pilotos IA -->
-							<div class="bg-slate-950/80 border border-slate-900 rounded-xl p-4 col-span-3 flex items-center justify-center text-slate-500 text-center font-mono italic text-[11px]">
-								🔒 Datos financieros privados y contratos protegidos bajo normativa FIA.
-							</div>
 						{% endif %}
 					</div>
 
@@ -183,20 +178,6 @@
 
 						<div>
 							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
-								<span>Consistencia</span>
-								<span class="text-white font-bold">{{ piloto.statConsistencia }}</span>
-							</div>
-							<div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statConsistencia }}%"></div>
-							</div>
-						</div>
-					</div>
-
-					<div class="bg-slate-900 border border-slate-800/60 p-5 rounded-xl space-y-4">
-						<h3 class="text-xs font-racing text-slate-400 uppercase tracking-wider mb-2">// Atributos Tácticos</h3>
-
-						<div>
-							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">
 								<span>Adelantamiento</span>
 								<span class="text-white font-bold">{{ piloto.statAdelantamiento }}</span>
 							</div>
@@ -204,6 +185,10 @@
 								<div class="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full" style="width: {{ piloto.statAdelantamiento }}%"></div>
 							</div>
 						</div>
+					</div>
+
+					<div class="bg-slate-900 border border-slate-800/60 p-5 rounded-xl space-y-4">
+						<h3 class="text-xs font-racing text-slate-400 uppercase tracking-wider mb-2">// Atributos Tácticos</h3>
 
 						<div>
 							<div class="flex justify-between text-slate-400 mb-1 text-xs font-mono">

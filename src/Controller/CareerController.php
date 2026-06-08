@@ -83,6 +83,7 @@ class CareerController extends AbstractController
             $partida->setIngameAno(2026);
             $partida->setIngameEstado('Karting');
             $partida->setFechaGuardado(new \DateTime());
+            $partida->setIngameSemana(1);
             $em->persist($partida);
 
             $piloto = new PilotoUsuario();
@@ -101,7 +102,6 @@ class CareerController extends AbstractController
 
             $piloto->setStatClasificacion(50);
             $piloto->setStatRitmo(50);
-            $piloto->setStatConsistencia(50);
             $piloto->setStatAdelantamiento(50);
             $piloto->setStatDefensa(50);
             $piloto->setStatGestionNeumaticos(50);
@@ -373,7 +373,6 @@ class CareerController extends AbstractController
                             $potencia = ($categoria === 'F1') ? 83 : (($categoria === 'F2') ? 66 : 48);
                             $pilotoIA->setStatClasificacion(rand($potencia, $potencia + 12));
                             $pilotoIA->setStatRitmo(rand($potencia, $potencia + 13));
-                            $pilotoIA->setStatConsistencia(rand($potencia, $potencia + 10));
                             $pilotoIA->setStatAdelantamiento(rand($potencia, $potencia + 11));
                             $pilotoIA->setStatDefensa(rand($potencia, $potencia + 11));
                             $pilotoIA->setStatGestionNeumaticos(rand($potencia, $potencia + 12));
@@ -413,7 +412,6 @@ class CareerController extends AbstractController
                         $potenciaLibre = $alData[4];
                         $pilotoLibre->setStatClasificacion(rand($potenciaLibre - 3, $potenciaLibre + 4));
                         $pilotoLibre->setStatRitmo(rand($potenciaLibre - 2, $potenciaLibre + 5));
-                        $pilotoLibre->setStatConsistencia(rand($potenciaLibre - 4, $potenciaLibre + 3));
                         $pilotoLibre->setStatAdelantamiento(rand($potenciaLibre - 2, $potenciaLibre + 4));
                         $pilotoLibre->setStatDefensa(rand($potenciaLibre - 3, $potenciaLibre + 3));
                         $pilotoLibre->setStatGestionNeumaticos(rand($potenciaLibre - 1, $potenciaLibre + 5));
@@ -474,6 +472,7 @@ class CareerController extends AbstractController
                         $calendarioCita->setOrdenCarrera($index + 1);
                         $calendarioCita->setClimaPrevisto(['SOLEADO', 'NUBLADO', 'LLUVIA LIGERA', 'TORMENTA'][rand(0, 3)]);
                         $calendarioCita->setEstadoEvento('PENDIENTE');
+                        $calendarioCita->setSemanaCarrera($index + 1);
 
                         $em->persist($calendarioCita);
                     }

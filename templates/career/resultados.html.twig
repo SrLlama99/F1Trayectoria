@@ -13,9 +13,6 @@
                 <span class="text-cyan-400 font-racing text-xs tracking-widest block uppercase">Telemetry & Database // FIA Official</span>
                 <h1 class="text-2xl font-black font-racing uppercase italic mt-0.5">HISTÓRICO DE <span class="text-cyan-400">RESULTADOS</span></h1>
             </div>
-            <a href="/career/main/{{ partida.idPartida }}" class="text-xs font-racing uppercase tracking-wider border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 px-4 py-2.5 rounded transition-colors">
-                Volver al Paddock
-            </a>
         </header>
 
         <form method="GET" action="{{ path('app_career_resultados', { 'partidaId': partida.idPartida }) }}" class="bg-slate-900/20 border border-slate-900 p-4 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-4 items-end font-mono">
@@ -32,13 +29,9 @@
                 <label class="block text-[10px] text-slate-500 uppercase font-racing mb-1 tracking-wider">Filtrar Temporada</label>
                 <select name="ano" onchange="this.form.submit()" class="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs px-3 py-2 rounded focus:outline-none focus:border-cyan-500 cursor-pointer">
                     {% for anio in añosDisponibles %}
-                        <option value="{{ anio }}" {% if filtros.ano == anio %}selected{% endif %}>📅 AÑO SIMULACIÓN {{ anio }}</option>
+                        <option value="{{ anio }}" {% if filtros.ano == anio %}selected{% endif %}>📅 AÑO {{ anio }}</option>
                     {% endfor %}
                 </select>
-            </div>
-            
-            <div class="text-xs text-slate-400 pb-2 italic text-center sm:text-right">
-                Datos oficiales encriptados por la FIA
             </div>
         </form>
 

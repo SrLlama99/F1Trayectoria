@@ -29,13 +29,56 @@ class TiendaCompra
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $fechaCompra = null;
 
-    public function __construct() { $this->fechaCompra = new \DateTime(); }
-    public function getId(): ?int { return $this->id; }
-    public function getPartida(): ?PartidaGuardada { return $this->partida; }
-    public function setPartida(?PartidaGuardada $p): self { $this->partida = $p; return $this; }
-    public function getPilotoUsuario(): ?PilotoUsuario { return $this->pilotoUsuario; }
-    public function setPilotoUsuario(?PilotoUsuario $u): self { $this->pilotoUsuario = $u; return $this; }
-    public function getItem(): ?TiendaItem { return $this->item; }
-    public function setItem(?TiendaItem $item): self { $this->item = $item; return $this; }
-    public function getFechaCompra(): ?\DateTimeInterface { return $this->fechaCompra; }
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $desgaste = 0;
+
+    public function __construct()
+    {
+        $this->fechaCompra = new \DateTime();
+        $this->desgaste = 0; // Empieza al 0% de desgaste
+    }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+    public function getPartida(): ?PartidaGuardada
+    {
+        return $this->partida;
+    }
+    public function setPartida(?PartidaGuardada $p): self
+    {
+        $this->partida = $p;
+        return $this;
+    }
+    public function getPilotoUsuario(): ?PilotoUsuario
+    {
+        return $this->pilotoUsuario;
+    }
+    public function setPilotoUsuario(?PilotoUsuario $u): self
+    {
+        $this->pilotoUsuario = $u;
+        return $this;
+    }
+    public function getItem(): ?TiendaItem
+    {
+        return $this->item;
+    }
+    public function setItem(?TiendaItem $item): self
+    {
+        $this->item = $item;
+        return $this;
+    }
+    public function getFechaCompra(): ?\DateTimeInterface
+    {
+        return $this->fechaCompra;
+    }
+    public function getDesgaste(): int
+    {
+        return $this->desgaste;
+    }
+    public function setDesgaste(int $desgaste): self
+    {
+        $this->desgaste = max(0, min(100, $desgaste));
+        return $this;
+    }
 }
